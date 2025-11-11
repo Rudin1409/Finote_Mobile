@@ -79,12 +79,10 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   Widget _buildTransactionList() {
     final List<Map<String, dynamic>> transactions = [
-      {'icon': Icons.electrical_services, 'title': 'Electricity', 'date': '21 FEB, 2018', 'amount': '- Rp 180.000', 'color': Colors.redAccent},
-      {'icon': Icons.fastfood, 'title': 'McDonalds', 'date': '19 FEB, 2018', 'amount': '- Rp 75.000', 'color': Colors.redAccent},
-      {'icon': Icons.account_balance, 'title': 'Gaji Masuk', 'date': '17 FEB, 2018', 'amount': '+ Rp 5.000.000', 'color': Colors.greenAccent},
-      {'icon': Icons.business_center, 'title': 'Proyek Royalz', 'date': '16 FEB, 2018', 'amount': '+ Rp 1.245.000', 'color': Colors.greenAccent},
-      {'icon': Icons.music_note, 'title': 'Langganan Spotify', 'date': '11 FEB, 2018', 'amount': '- Rp 55.000', 'color': Colors.redAccent},
-      {'icon': Icons.fastfood, 'title': 'McDonalds', 'date': '10 FEB, 2018', 'amount': '- Rp 60.000', 'color': Colors.redAccent},
+      {'icon': Icons.electrical_services, 'title': 'Electricity', 'date': '21 FEB, 2018', 'amount': '- Rp 180.000', 'color': Colors.red},
+      {'icon': Icons.fastfood, 'title': 'McDonalds', 'date': '19 FEB, 2018', 'amount': '- Rp 75.000', 'color': Colors.red},
+      {'icon': Icons.music_note, 'title': 'Langganan Spotify', 'date': '11 FEB, 2018', 'amount': '- Rp 55.000', 'color': Colors.red},
+      {'icon': Icons.fastfood, 'title': 'McDonalds', 'date': '10 FEB, 2018', 'amount': '- Rp 60.000', 'color': Colors.red},
     ];
 
     return Expanded(

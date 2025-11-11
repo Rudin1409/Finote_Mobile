@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:myapp/screens/auth/forgot_password_screen.dart';
-import 'package:myapp/screens/auth/signup_screen.dart';
 import 'package:myapp/screens/main_screen.dart';
+import 'package:myapp/screens/auth/forgot_password_screen.dart'; // Import existing screen
+import 'package:myapp/screens/auth/signup_screen.dart'; // Import existing screen
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,168 +13,192 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool _saveMyInfo = false;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isObscure = true;
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF37C8C3);
-
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 20),
-              Text(
-                'Login',
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 40),
+            Text(
+              'Welcome Back!',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Login to your account to continue.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                color: Colors.grey[400],
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 50),
+            _buildTextField(controller: _emailController, labelText: 'Email', hintText: 'Enter your email'),
+            const SizedBox(height: 20),
+            _buildPasswordField(),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  // Navigate to the existing Forgot Password screen
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                  );
+                },
+                child: Text(
+                  'Forgot Password?',
+                  style: GoogleFonts.poppins(color: const Color(0xFF37C8C3)),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Masukkan email dan password Anda',
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to the main app screen after successful login
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => const MainScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF37C8C3),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'LOGIN',
                 style: GoogleFonts.poppins(
-                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                   fontSize: 16,
                 ),
               ),
-              const SizedBox(height: 40),
-              TextField(
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  labelStyle: const TextStyle(color: Colors.grey),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: primaryColor),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.white),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Don't have an account? ",
+                  style: GoogleFonts.poppins(color: Colors.grey[400]),
                 ),
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                obscureText: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  labelStyle: const TextStyle(color: Colors.grey),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: primaryColor),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Switch(
-                    value: _saveMyInfo,
-                    onChanged: (value) {
-                      setState(() {
-                        _saveMyInfo = value;
-                      });
-                    },
-                    activeThumbColor: primaryColor,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Save my info?',
-                    style: GoogleFonts.poppins(color: Colors.white),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: () {
-                  // Arahkan ke halaman utama setelah login
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const MainScreen()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: Text(
-                  'LOGIN',
-                  style: GoogleFonts.poppins(
-                    color: Colors.black,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-                  );
-                },
-                child: Text(
-                  'LUPA PASSWORD?',
-                  style: GoogleFonts.poppins(color: primaryColor, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Expanded(child: Divider(color: Colors.grey)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                        );
-                      },
-                      child: Text(
-                        'OR / REGISTER',
-                        style: GoogleFonts.poppins(color: Colors.grey),
-                      ),
+                TextButton(
+                  onPressed: () {
+                    // Corrected class name
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                    );
+                  },
+                  child: Text(
+                    'Sign Up',
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFF37C8C3),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Expanded(child: Divider(color: Colors.grey)),
-                ],
-              ),
-              const SizedBox(height: 32),
-              const Icon(Icons.fingerprint, color: primaryColor, size: 64),
-              const SizedBox(height: 8),
-              Text(
-                'Scan',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({required TextEditingController controller, required String labelText, required String hintText}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          labelText,
+          style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          style: GoogleFonts.poppins(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: GoogleFonts.poppins(color: Colors.grey),
+            filled: true,
+            fillColor: const Color(0xFF1C1C1C),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF37C8C3)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Password',
+          style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: _isObscure,
+          style: GoogleFonts.poppins(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'Enter your password',
+            hintStyle: GoogleFonts.poppins(color: Colors.grey),
+            filled: true,
+            fillColor: const Color(0xFF1C1C1C),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF37C8C3)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.white),
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _isObscure ? Icons.visibility_off : Icons.visibility,
+                color: Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isObscure = !_isObscure;
+                });
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,12 +1,12 @@
 
 import 'package:flutter/material.dart';
-import 'package:myapp/screens/ai_analysis/ai_analysis_screen.dart';
 import 'package:myapp/screens/home/home_screen.dart';
 import 'package:myapp/screens/income/income_screen.dart';
 import 'package:myapp/screens/expense/expense_screen.dart';
 import 'package:myapp/screens/settings/settings_screen.dart';
 import 'package:myapp/screens/savings/savings_screen.dart';
-import 'package:myapp/screens/debt/debt_screen.dart'; // Import the new screen
+import 'package:myapp/screens/debt/debt_screen.dart';
+import 'package:myapp/screens/ai_analysis/financial_report_screen.dart'; // Import the new report screen
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 class MainScreen extends StatefulWidget {
@@ -39,41 +39,36 @@ class _MainScreenState extends State<MainScreen> {
       const DebtScreen(),
       // 4: Tabungan
       SavingsScreen(onNavigate: _onItemTapped),
-      // 5: AI Analysis (Not in bottom nav)
-      AiAnalysisScreen(onNavigate: _onItemTapped),
-      // 6: Settings (Not in bottom nav)
-      SettingsScreen(onNavigate: _onItemTapped),
+      // Note: Settings and AI screens are not in the main stack anymore
+      // They are pushed on top via Navigator.
     ];
   }
 
   void _onItemTapped(int index) {
-    if (index >= 0 && index < 5) {
+    if (index >= 0 && index < _pages.length) {
       setState(() {
         _selectedIndex = index;
       });
-    } else if (index == 2) { // Special case to return to home
-       setState(() {
-        _selectedIndex = 2;
-      });
-    }
+    } 
   }
 
   void _navigateToAi() {
-    setState(() {
-      _selectedIndex = 5; // Index for AiAnalysisScreen
-    });
+    // Navigate to the new FinancialReportScreen
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FinancialReportScreen()));
   }
 
   void _navigateToSettings() {
-    setState(() {
-      _selectedIndex = 6; // Index for SettingsScreen
-    });
+    // Navigate to the SettingsScreen
+     Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsScreen(onNavigate: (int index) { 
+        // This callback can be used if settings needs to navigate within MainScreen
+        _onItemTapped(index);
+        // Pop the settings screen to show the main screen at the new index
+        Navigator.of(context).pop(); 
+     })));
   }
 
   @override
   Widget build(BuildContext context) {
-    bool showNavBar = _selectedIndex >= 0 && _selectedIndex < 5;
-
     const primaryColor = Color(0xFF37C8C3);
 
     final navBarItems = <Widget>[
@@ -90,20 +85,18 @@ class _MainScreenState extends State<MainScreen> {
         index: _selectedIndex,
         children: _pages,
       ),
-      bottomNavigationBar: showNavBar
-          ? CurvedNavigationBar(
-              index: _selectedIndex,
-              height: 60.0,
-              items: navBarItems,
-              color: primaryColor, 
-              buttonBackgroundColor: primaryColor, 
-              backgroundColor: Colors.transparent, 
-              animationCurve: Curves.easeInOut,
-              animationDuration: const Duration(milliseconds: 400),
-              onTap: _onItemTapped,
-              letIndexChange: (index) => true,
-            )
-          : null,
+      bottomNavigationBar: CurvedNavigationBar(
+        index: _selectedIndex,
+        height: 60.0,
+        items: navBarItems,
+        color: primaryColor, 
+        buttonBackgroundColor: primaryColor, 
+        backgroundColor: Colors.transparent, 
+        animationCurve: Curves.easeInOut,
+        animationDuration: const Duration(milliseconds: 400),
+        onTap: _onItemTapped,
+        letIndexChange: (index) => true,
+      ),
     );
   }
 }

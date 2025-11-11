@@ -1,7 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart'; // Import intl package
 import 'package:myapp/screens/debt/debt_detail_screen.dart';
+import 'package:myapp/widgets/add_debt_form.dart';
 
 class DebtScreen extends StatefulWidget {
   const DebtScreen({super.key});
@@ -26,7 +28,12 @@ class _DebtScreenState extends State<DebtScreen> {
           IconButton(
             icon: const Icon(Icons.add, color: Colors.white),
             onPressed: () {
-              // TODO: Implement add debt functionality
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => const AddDebtForm(),
+              );
             },
           ),
         ],
@@ -44,7 +51,7 @@ class _DebtScreenState extends State<DebtScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Rp 12,902',
+                'Rp 12.500.000', // Updated total
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 40,
@@ -71,22 +78,22 @@ class _DebtScreenState extends State<DebtScreen> {
                 child: _buildDebtItem(
                   icon: FontAwesomeIcons.creditCard,
                   title: 'Paylater',
-                  amount: 300,
+                  totalAmount: 1500000, // More realistic amount
                   progress: 0.7,
                 ),
               ),
               const SizedBox(height: 16),
               _buildDebtItem(
-                icon: FontAwesomeIcons.car,
+                icon: FontAwesomeIcons.laptop,
                 title: 'Leptop',
-                amount: 1200,
+                totalAmount: 8000000, // More realistic amount
                 progress: 0.4,
               ),
               const SizedBox(height: 16),
               _buildDebtItem(
                 icon: FontAwesomeIcons.desktop,
                 title: 'PC',
-                amount: 2000,
+                totalAmount: 15000000, // More realistic amount
                 progress: 0.9,
               ),
             ],
@@ -99,9 +106,12 @@ class _DebtScreenState extends State<DebtScreen> {
   Widget _buildDebtItem({
     required IconData icon,
     required String title,
-    required double amount,
+    required double totalAmount, // Changed from amount to totalAmount
     required double progress,
   }) {
+    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    final formattedTotalAmount = currencyFormatter.format(totalAmount);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -138,10 +148,11 @@ class _DebtScreenState extends State<DebtScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '\$${amount.toStringAsFixed(2)} LEFT',
+                  'Total: $formattedTotalAmount', // Display formatted total amount
                   style: const TextStyle(
                     color: Colors.grey,
                     fontSize: 14,
+                    fontWeight: FontWeight.w500
                   ),
                 ),
               ],

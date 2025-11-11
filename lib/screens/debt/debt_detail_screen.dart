@@ -1,10 +1,23 @@
 
 import 'package:flutter/material.dart';
+import 'package:myapp/widgets/pay_debt_form.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class DebtDetailScreen extends StatelessWidget {
   const DebtDetailScreen({super.key});
+
+  // Dummy data for the payment URL
+  final String paymentUrl = 'https://link.shopeepay.co.id/2/23423423';
+
+  void _showPayDebtModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => PayDebtForm(paymentUrl: paymentUrl),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +72,7 @@ class DebtDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () => _showPayDebtModal(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),

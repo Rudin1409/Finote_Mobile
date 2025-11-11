@@ -152,7 +152,7 @@ class HomeScreen extends StatelessWidget {
             backgroundColor: primaryColor,
             label: 'Analisis AI',
             labelStyle: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
-            labelBackgroundColor: primaryColor.withAlpha(204), // Fix: withOpacity -> withAlpha
+            labelBackgroundColor: primaryColor.withAlpha(204),
             onTap: onNavigateToAi,
           ),
           SpeedDialChild(
@@ -160,7 +160,7 @@ class HomeScreen extends StatelessWidget {
             backgroundColor: primaryColor,
             label: 'Pengaturan',
             labelStyle: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
-            labelBackgroundColor: primaryColor.withAlpha(204), // Fix: withOpacity -> withAlpha
+            labelBackgroundColor: primaryColor.withAlpha(204),
             onTap: onNavigateToSettings,
           ),
         ],
@@ -168,67 +168,68 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // ... (The rest of the widgets: _buildBalanceCard, etc. remain the same)
-
-
   Widget _buildBalanceCard(BuildContext context, Color primaryColor) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(32),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Saldo Akhir', style: GoogleFonts.poppins(color: Colors.white, fontSize: 18)),
-              // The add button is removed from here
-            ],
+  const double balance = 29000.45;
+  const double change = 2134.42;
+  final double percentageChange = (change / (balance - change)) * 100;
+  final bool isPositive = change > 0;
+
+  return Container(
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: Colors.grey[900],
+      borderRadius: BorderRadius.circular(32),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Saldo Akhir', style: GoogleFonts.poppins(color: Colors.white, fontSize: 18)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text('Rp ${balance.toStringAsFixed(2)}', style: GoogleFonts.poppins(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Icon(isPositive ? Icons.arrow_upward : Icons.arrow_downward, color: isPositive ? Colors.green : Colors.red, size: 16),
+            const SizedBox(width: 4),
+            Text('${isPositive ? '+' : ''}${percentageChange.toStringAsFixed(1)}%', style: GoogleFonts.poppins(color: isPositive ? Colors.green : Colors.red)),
+            const SizedBox(width: 8),
+            Text('(${isPositive ? '+' : '-'}_${change.toStringAsFixed(2)})', style: GoogleFonts.poppins(color: Colors.grey)),
+          ],
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          height: 100,
+          child: LineChart(
+            _mainData(primaryColor),
           ),
-          const SizedBox(height: 8),
-          Text('Rp 29.000,45', style: GoogleFonts.poppins(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.arrow_upward, color: Colors.green, size: 16),
-              const SizedBox(width: 4),
-              Text('+3,4%', style: GoogleFonts.poppins(color: Colors.green)),
-              const SizedBox(width: 8),
-              Text('(+_2.134,42)', style: GoogleFonts.poppins(color: Colors.grey)),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 100,
-            child: LineChart(
-              _mainData(primaryColor),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildIncomeExpenseButton(
+              icon: Icons.attach_money,
+              label: 'PEMASUKAN',
+              color: primaryColor,
+              onPressed: () => onNavigate(0),
             ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildIncomeExpenseButton(
-                icon: Icons.attach_money,
-                label: 'PEMASUKAN',
-                color: primaryColor,
-                onPressed: () => onNavigate(0),
-              ),
-              _buildIncomeExpenseButton(
-                icon: Icons.money_off,
-                label: 'PENGELUARAN',
-                color: primaryColor,
-                onPressed: () => onNavigate(1),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+            _buildIncomeExpenseButton(
+              icon: Icons.money_off,
+              label: 'PENGELUARAN',
+              color: primaryColor,
+              onPressed: () => onNavigate(1),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 
    Widget _buildIncomeExpenseButton({required IconData icon, required String label, required Color color, required VoidCallback onPressed}) {
     return OutlinedButton.icon(
