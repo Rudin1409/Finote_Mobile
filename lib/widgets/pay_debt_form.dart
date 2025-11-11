@@ -9,14 +9,15 @@ class PayDebtForm extends StatefulWidget {
   const PayDebtForm({super.key, required this.paymentUrl});
 
   @override
-  _PayDebtFormState createState() => _PayDebtFormState();
+  PayDebtFormState createState() => PayDebtFormState();
 }
 
-class _PayDebtFormState extends State<PayDebtForm> {
+class PayDebtFormState extends State<PayDebtForm> {
 
    Future<void> _launchURL() async {
     final Uri uri = Uri.parse(widget.paymentUrl);
     if (!await launchUrl(uri)) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not launch ${widget.paymentUrl}')),
       );
@@ -131,8 +132,7 @@ class _PayDebtFormState extends State<PayDebtForm> {
             ),
           child: DropdownButtonFormField<String>(
             hint: Text(hint, style: GoogleFonts.poppins(color: Colors.grey[600])),
-            value: null,
-            items: [], // Dummy
+            items: const [], // Dummy
             onChanged: (value) {},
             decoration: const InputDecoration(
               border: InputBorder.none,

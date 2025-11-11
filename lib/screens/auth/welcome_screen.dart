@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:myapp/screens/auth/login_screen.dart';
-import 'package:myapp/screens/auth/signup_screen.dart'; // Import the existing signup screen
+import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
+import 'package:myapp/features/auth/presentation/screens/signup_screen.dart'; // Import the existing signup screen
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});

@@ -181,8 +181,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
     );
   }
 
-  Widget _buildHistoryList() {
-    // Dummy data for income history
+   Widget _buildHistoryList() {
     final List<Map<String, dynamic>> history = [
       {'icon': Icons.work, 'title': 'Gaji Bulanan', 'date': '01 MAR, 2024', 'amount': '+ Rp 8.500.000', 'color': Colors.greenAccent},
       {'icon': Icons.card_giftcard, 'title': 'Hadiah Ulang Tahun', 'date': '28 FEB, 2024', 'amount': '+ Rp 500.000', 'color': Colors.greenAccent},
@@ -192,7 +191,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
 
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.only(top: 24.0),
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
         decoration: const BoxDecoration(
           color: Color(0xFF2F2F2F),
           borderRadius: BorderRadius.only(
@@ -201,20 +200,17 @@ class _IncomeScreenState extends State<IncomeScreen> {
           ),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Row(
-                children: [
-                  Text(
-                    'HISTORY',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                'RIWAYAT PEMASUKAN',
+                style: GoogleFonts.poppins(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -223,22 +219,28 @@ class _IncomeScreenState extends State<IncomeScreen> {
                 itemCount: history.length,
                 itemBuilder: (context, index) {
                   final item = history[index];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: const Color(0x1A45C8B4),
-                      child: Icon(item['icon'] as IconData, color: const Color(0xFF45C8B4), size: 20),
-                    ),
-                    title: Text(
-                      item['title'] as String,
-                      style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(
-                      item['date'] as String,
-                      style: GoogleFonts.poppins(color: Colors.white54, fontSize: 12),
-                    ),
-                    trailing: Text(
-                      item['amount'] as String,
-                      style: GoogleFonts.poppins(color: item['color'] as Color, fontWeight: FontWeight.bold, fontSize: 16),
+                  return Card(
+                    color: const Color(0xFF3B3B3B),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      leading: CircleAvatar(
+                        backgroundColor: const Color(0xFF37C8C3).withAlpha(25),
+                        child: Icon(item['icon'] as IconData, color: const Color(0xFF37C8C3), size: 22),
+                      ),
+                      title: Text(
+                        item['title'] as String,
+                        style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15),
+                      ),
+                      subtitle: Text(
+                        item['date'] as String,
+                        style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
+                      ),
+                      trailing: Text(
+                        item['amount'] as String,
+                        style: GoogleFonts.poppins(color: item['color'] as Color, fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
                     ),
                   );
                 },

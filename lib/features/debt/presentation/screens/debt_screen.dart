@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart'; // Import intl package
-import 'package:myapp/screens/debt/debt_detail_screen.dart';
+import 'package:myapp/features/debt/presentation/screens/debt_detail_screen.dart';
 import 'package:myapp/widgets/add_debt_form.dart';
 
 class DebtScreen extends StatefulWidget {

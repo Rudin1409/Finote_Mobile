@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:myapp/screens/savings/savings_detail_screen.dart';
+import 'package:myapp/features/savings/presentation/screens/savings_detail_screen.dart';
 import 'package:myapp/widgets/add_saving_form.dart'; // Import the form widget
 
 class SavingsScreen extends StatelessWidget {

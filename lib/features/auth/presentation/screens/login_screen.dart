@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/screens/main_screen.dart';
-import 'package:myapp/screens/auth/forgot_password_screen.dart'; // Import existing screen
-import 'package:myapp/screens/auth/signup_screen.dart'; // Import existing screen
+import 'package:myapp/features/auth/presentation/screens/forgot_password_screen.dart'; 
+import 'package:myapp/features/auth/presentation/screens/signup_screen.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

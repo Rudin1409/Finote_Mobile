@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:myapp/screens/savings/add_funds_screen.dart';
+import 'package:myapp/features/savings/presentation/screens/add_funds_screen.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class SavingsDetailScreen extends StatelessWidget {
