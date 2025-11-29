@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:myapp/core/services/firestore_service.dart';
+import 'package:myapp/core/theme/app_theme.dart';
 
 class AddFundsScreen extends StatefulWidget {
   final String savingGoalName;
+  final String savingId;
 
-  const AddFundsScreen({super.key, required this.savingGoalName});
+  const AddFundsScreen({
+    super.key,
+    required this.savingGoalName,
+    required this.savingId,
+  });
 
   @override
   State<AddFundsScreen> createState() => _AddFundsScreenState();
@@ -13,6 +20,7 @@ class AddFundsScreen extends StatefulWidget {
 
 class _AddFundsScreenState extends State<AddFundsScreen> {
   String _amount = '0';
+  bool _isLoading = false;
 
   void _onKeyPress(String value) {
     setState(() {
@@ -33,6 +41,48 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
         }
       }
     });
+  }
+
+  Future<void> _addFunds() async {
+    final amount = double.parse(_amount);
+    if (amount <= 0) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await FirestoreService().addSavingEntry(
+        savingId: widget.savingId,
+        amount: amount,
+        date: DateTime.now(),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Dana berhasil ditambahkan'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menambahkan dana: $e'),
+            backgroundColor: FinoteColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -103,10 +153,7 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: ElevatedButton(
-              onPressed: () {
-                // TODO: Implement add funds logic
-                Navigator.of(context).pop();
-              },
+              onPressed: _isLoading ? null : _addFunds,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: const Color(0xFF37C8C3),
@@ -116,13 +163,22 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 minimumSize: const Size(double.infinity, 50),
               ),
-              child: Text(
-                'TAMBAH DANA',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF37C8C3),
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'TAMBAH DANA',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -191,7 +247,8 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
         height: 70,
         alignment: Alignment.center,
         child: value == 'backspace'
-            ? const Icon(Icons.backspace_outlined, color: Colors.white, size: 28)
+            ? const Icon(Icons.backspace_outlined,
+                color: Colors.white, size: 28)
             : Text(
                 value,
                 style: GoogleFonts.poppins(

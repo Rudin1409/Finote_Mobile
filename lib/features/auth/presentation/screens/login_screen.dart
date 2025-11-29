@@ -1,9 +1,11 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/screens/main_screen.dart';
-import 'package:myapp/features/auth/presentation/screens/forgot_password_screen.dart'; 
-import 'package:myapp/features/auth/presentation/screens/signup_screen.dart'; 
+import 'package:myapp/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:myapp/features/auth/presentation/screens/signup_screen.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:myapp/core/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,6 +18,71 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isObscure = true;
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      final user = userCredential.user;
+
+      if (user != null) {
+        if (user.emailVerified) {
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const MainScreen()),
+            );
+          }
+        } else {
+          await FirebaseAuth.instance.signOut();
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                backgroundColor: const Color(0xFF2F2F2F),
+                title: Text('Email Belum Terverifikasi',
+                    style: FinoteTextStyles.titleMedium),
+                content: Text(
+                  'Silakan verifikasi email Anda terlebih dahulu sebelum login.',
+                  style: FinoteTextStyles.bodyMedium,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('OK',
+                        style: TextStyle(color: FinoteColors.primary)),
+                  ),
+                ],
+              ),
+            );
+          }
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'Login failed'),
+            backgroundColor: FinoteColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +121,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 50),
-            _buildTextField(controller: _emailController, labelText: 'Email', hintText: 'Enter your email'),
+            _buildTextField(
+                controller: _emailController,
+                labelText: 'Email',
+                hintText: 'Enter your email'),
             const SizedBox(height: 20),
             _buildPasswordField(),
             const SizedBox(height: 10),
@@ -64,7 +134,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () {
                   // Navigate to the existing Forgot Password screen
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const ForgotPasswordScreen()),
                   );
                 },
                 child: Text(
@@ -75,27 +146,24 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () {
-                // Navigate to the main app screen after successful login
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => const MainScreen()),
-                );
-              },
+              onPressed: _isLoading ? null : _login,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF37C8C3),
+                backgroundColor: FinoteColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(
-                'LOGIN',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-              ),
+              child: _isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : Text(
+                      'LOGIN',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
             ),
             const SizedBox(height: 20),
             Row(
@@ -109,7 +177,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () {
                     // Corrected class name
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const SignUpScreen()),
                     );
                   },
                   child: Text(
@@ -128,7 +197,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller, required String labelText, required String hintText}) {
+  Widget _buildTextField(
+      {required TextEditingController controller,
+      required String labelText,
+      required String hintText}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

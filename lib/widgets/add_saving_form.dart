@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:myapp/core/services/firestore_service.dart';
+import 'package:myapp/core/theme/app_theme.dart';
 
 class AddSavingForm extends StatefulWidget {
   const AddSavingForm({super.key});
@@ -12,6 +14,75 @@ class AddSavingForm extends StatefulWidget {
 class _AddSavingFormState extends State<AddSavingForm> {
   bool isTargetSelected = true; // Default to TARGET
   DateTime? _selectedDate;
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _targetAmountController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _targetAmountController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveSaving() async {
+    if (_titleController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Nama tabungan harus diisi',
+                style: FinoteTextStyles.bodyMedium),
+            backgroundColor: FinoteColors.error),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      double targetAmount = 0;
+      if (isTargetSelected && _targetAmountController.text.isNotEmpty) {
+        targetAmount = double.parse(
+            _targetAmountController.text.replaceAll(RegExp(r'[^0-9]'), ''));
+      }
+
+      await FirestoreService().addSaving(
+        name: _titleController.text, // Changed from title
+        goalType: isTargetSelected ? 'target' : 'regular', // Added goalType
+        targetAmount: targetAmount,
+        currentAmount: 0,
+        targetDate: _selectedDate, // Added targetDate
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tabungan berhasil dibuat',
+                style: FinoteTextStyles.bodyMedium),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal membuat tabungan: $e',
+                style: FinoteTextStyles.bodyMedium),
+            backgroundColor: FinoteColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +117,8 @@ class _AddSavingFormState extends State<AddSavingForm> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                    icon:
+                        const Icon(Icons.close, color: Colors.white, size: 28),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -60,31 +132,50 @@ class _AddSavingFormState extends State<AddSavingForm> {
             const SizedBox(height: 30),
             _buildSavingTypeSelector(primaryColor),
             const SizedBox(height: 25),
-            _buildTextField(label: 'Nama Tabungan', hint: isTargetSelected ? 'Ex: Motor' : 'Ex: Dana Darurat'),
+            _buildTextField(
+              label: 'Nama Tabungan',
+              hint: isTargetSelected ? 'Ex: Motor' : 'Ex: Dana Darurat',
+              controller: _titleController,
+            ),
             const SizedBox(height: 15),
             if (isTargetSelected)
               Column(
                 children: [
-                  _buildTextField(label: 'Jumlah Target (IDR)', hint: 'Ex: 50000', keyboardType: TextInputType.number),
+                  _buildTextField(
+                    label: 'Jumlah Target (IDR)',
+                    hint: 'Ex: 50000',
+                    keyboardType: TextInputType.number,
+                    controller: _targetAmountController,
+                  ),
                   const SizedBox(height: 15),
                   _buildDateField(),
                 ],
               ),
             const SizedBox(height: 35),
             ElevatedButton(
-              onPressed: () {
-                // TODO: Implement create saving logic
-                Navigator.of(context).pop();
-              },
+              onPressed: _isLoading ? null : _saveSaving,
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)),
               ),
-              child: Text(
-                'BUAT TABUNGAN',
-                style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'BUAT TABUNGAN',
+                      style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold),
+                    ),
             ),
             const SizedBox(height: 20),
           ],
@@ -97,18 +188,21 @@ class _AddSavingFormState extends State<AddSavingForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Pilih Jenis Tabungan', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
+        Text('Pilih Jenis Tabungan',
+            style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
         const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
-              child: _buildTypeButton('TARGET', isTargetSelected, primaryColor, () {
+              child: _buildTypeButton('TARGET', isTargetSelected, primaryColor,
+                  () {
                 setState(() => isTargetSelected = true);
               }),
             ),
             const SizedBox(width: 15),
             Expanded(
-              child: _buildTypeButton('BIASA', !isTargetSelected, primaryColor, () {
+              child: _buildTypeButton('BIASA', !isTargetSelected, primaryColor,
+                  () {
                 setState(() => isTargetSelected = false);
               }),
             ),
@@ -118,12 +212,14 @@ class _AddSavingFormState extends State<AddSavingForm> {
     );
   }
 
-  Widget _buildTypeButton(String text, bool isSelected, Color color, VoidCallback onPressed) {
+  Widget _buildTypeButton(
+      String text, bool isSelected, Color color, VoidCallback onPressed) {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         backgroundColor: isSelected ? color : Colors.transparent,
-        side: BorderSide(color: isSelected ? color : Colors.grey[600]!, width: 1.5),
+        side: BorderSide(
+            color: isSelected ? color : Colors.grey[600]!, width: 1.5),
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -137,13 +233,20 @@ class _AddSavingFormState extends State<AddSavingForm> {
     );
   }
 
-  Widget _buildTextField({required String label, required String hint, TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    TextInputType keyboardType = TextInputType.text,
+    required TextEditingController controller,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
+        Text(label,
+            style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
         const SizedBox(height: 8),
         TextField(
+          controller: controller,
           keyboardType: keyboardType,
           style: GoogleFonts.poppins(color: Colors.white),
           decoration: InputDecoration(
@@ -153,7 +256,8 @@ class _AddSavingFormState extends State<AddSavingForm> {
             fillColor: const Color(0xFF1C1C1C),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
-              borderSide: const BorderSide(color: Color(0xFF37C8C3), width: 1.5),
+              borderSide:
+                  const BorderSide(color: Color(0xFF37C8C3), width: 1.5),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
@@ -169,7 +273,8 @@ class _AddSavingFormState extends State<AddSavingForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tanggal Target', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
+        Text('Tanggal Target',
+            style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () async {
@@ -177,8 +282,7 @@ class _AddSavingFormState extends State<AddSavingForm> {
                 context: context,
                 initialDate: DateTime.now(),
                 firstDate: DateTime(2000),
-                lastDate: DateTime(2101)
-            );
+                lastDate: DateTime(2101));
             if (pickedDate != null) {
               setState(() {
                 _selectedDate = pickedDate;
@@ -198,7 +302,8 @@ class _AddSavingFormState extends State<AddSavingForm> {
                   ? 'Pilih Tanggal'
                   : DateFormat('dd MMMM yyyy').format(_selectedDate!),
               style: GoogleFonts.poppins(
-                  color: _selectedDate == null ? Colors.grey[600] : Colors.white),
+                  color:
+                      _selectedDate == null ? Colors.grey[600] : Colors.white),
             ),
           ),
         ),

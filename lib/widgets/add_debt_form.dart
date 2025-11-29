@@ -1,7 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:myapp/core/services/firestore_service.dart';
+import 'package:myapp/core/theme/app_theme.dart';
 
 class AddDebtForm extends StatefulWidget {
   const AddDebtForm({super.key});
@@ -21,10 +22,25 @@ class _AddDebtFormState extends State<AddDebtForm> {
   final _startDateController = TextEditingController();
   final _monthlyPaymentDateController = TextEditingController();
   final _paymentLinkController = TextEditingController();
-
   bool _isInstallment = true; // Default to Cicilan
+  bool _isLoading = false;
 
-  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _lenderController.dispose();
+    _amountController.dispose();
+    _dueDateController.dispose();
+    _installmentAmountController.dispose();
+    _durationController.dispose();
+    _startDateController.dispose();
+    _monthlyPaymentDateController.dispose();
+    _paymentLinkController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -35,6 +51,96 @@ class _AddDebtFormState extends State<AddDebtForm> {
       setState(() {
         controller.text = DateFormat('dd/MM/yyyy').format(picked);
       });
+    }
+  }
+
+  Future<void> _saveDebt() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        double amount = 0;
+        DateTime? dueDate;
+        DateTime? startDate;
+        int? paymentDayOfMonth;
+
+        // Parse common fields
+        if (_isInstallment) {
+          // For installment, amount is calculated or just the total expected
+          // Here we might want to calculate total from installment * duration if not explicitly set
+          double installmentAmount = double.tryParse(
+                  _installmentAmountController.text
+                      .replaceAll(RegExp(r'[^0-9]'), '')) ??
+              0;
+          int duration = int.tryParse(_durationController.text) ?? 0;
+          amount = installmentAmount * duration;
+
+          if (_startDateController.text.isNotEmpty) {
+            startDate =
+                DateFormat('dd/MM/yyyy').parse(_startDateController.text);
+          }
+
+          if (_monthlyPaymentDateController.text.isNotEmpty) {
+            DateTime paymentDate = DateFormat('dd/MM/yyyy')
+                .parse(_monthlyPaymentDateController.text);
+            paymentDayOfMonth = paymentDate.day;
+          }
+        } else {
+          // Lump sum
+          amount = double.tryParse(
+                  _amountController.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
+              0;
+          if (_dueDateController.text.isNotEmpty) {
+            dueDate = DateFormat('dd/MM/yyyy').parse(_dueDateController.text);
+          }
+        }
+
+        await FirestoreService().addDebt(
+          name: _nameController.text,
+          creditor: _lenderController.text,
+          amount: amount,
+          debtType: _isInstallment ? 'installment' : 'lump_sum',
+          dueDate: dueDate,
+          installmentAmount: _isInstallment
+              ? double.tryParse(_installmentAmountController.text
+                      .replaceAll(RegExp(r'[^0-9]'), '')) ??
+                  0
+              : null,
+          durationInMonths:
+              _isInstallment ? int.tryParse(_durationController.text) : null,
+          paymentDayOfMonth: paymentDayOfMonth,
+          startDate: startDate,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Hutang berhasil disimpan',
+                  style: FinoteTextStyles.bodyMedium),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal menyimpan hutang: $e',
+                  style: FinoteTextStyles.bodyMedium),
+              backgroundColor: FinoteColors.error,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -106,11 +212,15 @@ class _AddDebtFormState extends State<AddDebtForm> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('SEKALI BAYAR', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                      child: Text('SEKALI BAYAR',
+                          style:
+                              GoogleFonts.poppins(fontWeight: FontWeight.bold)),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('CICILAN', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                      child: Text('CICILAN',
+                          style:
+                              GoogleFonts.poppins(fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -121,12 +231,7 @@ class _AddDebtFormState extends State<AddDebtForm> {
                   _buildOneTimeForm(),
                 const SizedBox(height: 30),
                 ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      // Logika untuk menyimpan data
-                      Navigator.of(context).pop();
-                    }
-                  },
+                  onPressed: _isLoading ? null : _saveDebt,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF37C8C3),
                     minimumSize: const Size(double.infinity, 50),
@@ -134,13 +239,22 @@ class _AddDebtFormState extends State<AddDebtForm> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: Text(
-                    'SIMPAN TRANSAKSI',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          'SIMPAN TRANSAKSI',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -208,7 +322,8 @@ class _AddDebtFormState extends State<AddDebtForm> {
         const SizedBox(height: 20),
         _buildDateField('Tanggal Mulai Cicilan', _startDateController),
         const SizedBox(height: 20),
-        _buildDateField('Tanggal Pembayaran per Bulan', _monthlyPaymentDateController),
+        _buildDateField(
+            'Tanggal Pembayaran per Bulan', _monthlyPaymentDateController),
         const SizedBox(height: 20),
         _buildTextField(
           controller: _paymentLinkController,
@@ -287,9 +402,10 @@ class _AddDebtFormState extends State<AddDebtForm> {
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Colors.white),
             ),
-            suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF37C8C3)),
+            suffixIcon:
+                const Icon(Icons.calendar_today, color: Color(0xFF37C8C3)),
           ),
-           validator: (value) {
+          validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Tanggal tidak boleh kosong';
             }

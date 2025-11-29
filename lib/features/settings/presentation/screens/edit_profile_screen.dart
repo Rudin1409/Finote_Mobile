@@ -1,6 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -10,8 +11,46 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final _nameController = TextEditingController(text: 'Rudin');
-  final _emailController = TextEditingController(text: 'mbahrudin140906@gmail.com');
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  final User? _user = FirebaseAuth.instance.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: _user?.displayName ?? '');
+    _emailController = TextEditingController(text: _user?.email ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updateProfile() async {
+    if (_user == null) return;
+
+    try {
+      await _user.updateDisplayName(_nameController.text);
+      // Note: Updating email requires re-authentication and verification, skipping for simplicity in this step
+      // await _user!.updateEmail(_emailController.text);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profil berhasil diperbarui')),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memperbarui profil: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,13 +110,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               _buildTextField(
                 controller: _emailController,
                 labelText: 'Email',
+                readOnly: true, // Make email read-only for now
               ),
               const SizedBox(height: 30),
               ElevatedButton(
-                onPressed: () {
-                  // Logic to save changes
-                  Navigator.of(context).pop();
-                },
+                onPressed: _updateProfile,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF37C8C3),
                   minimumSize: const Size(double.infinity, 50),
@@ -103,6 +140,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _buildTextField({
     required TextEditingController controller,
     required String labelText,
+    bool readOnly = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,6 +152,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
+          readOnly: readOnly,
           style: GoogleFonts.poppins(color: Colors.white),
           decoration: InputDecoration(
             filled: true,

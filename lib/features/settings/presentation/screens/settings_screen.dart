@@ -1,9 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/features/settings/presentation/screens/change_password_screen.dart';
 import 'package:myapp/features/settings/presentation/widgets/delete_account_dialog.dart';
 import 'package:myapp/features/settings/presentation/screens/edit_profile_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   final Function(int) onNavigate;
@@ -11,15 +12,15 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email ?? 'No Email';
+    final name = user?.displayName ?? 'User';
+
     return Scaffold(
       backgroundColor: const Color(0xFF121212), // Darker background
       appBar: AppBar(
         backgroundColor: const Color(0xFF121212),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => onNavigate(2), // Navigate back to home
-        ),
         title: Text(
           'Settings', // Changed title
           style: GoogleFonts.poppins(
@@ -29,46 +30,57 @@ class SettingsScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            const CircleAvatar(
-              radius: 50,
-              // Placeholder for the profile image, replace with your actual image asset
-              backgroundImage: AssetImage('assets/images/finotelogo.png'),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Rudin',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await FirebaseAuth.instance.currentUser?.reload();
+          // Force rebuild to show updated info if any
+          (context as Element).markNeedsBuild();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
               children: [
-                const Icon(Icons.location_on, color: Color(0xFF37C8C3), size: 16),
-                const SizedBox(width: 8),
+                const SizedBox(height: 20),
+                const CircleAvatar(
+                  radius: 50,
+                  // Placeholder for the profile image, replace with your actual image asset
+                  backgroundImage: AssetImage('assets/images/avatar.png'),
+                ),
+                const SizedBox(height: 16),
                 Text(
-                  'mbahrudin140906@gmail.com',
+                  name,
                   style: GoogleFonts.poppins(
-                    color: Colors.grey[400],
-                    fontSize: 14,
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.location_on,
+                        color: Color(0xFF37C8C3), size: 16),
+                    const SizedBox(width: 8),
+                    Text(
+                      email,
+                      style: GoogleFonts.poppins(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 40),
+                _buildSettingsOptions(context),
+                const SizedBox(height: 40), // Replaced Spacer with SizedBox
+                _buildLogoutButton(context),
+                const SizedBox(height: 40),
               ],
             ),
-            const SizedBox(height: 40),
-            _buildSettingsOptions(context),
-            const Spacer(),
-            _buildLogoutButton(context),
-            const SizedBox(height: 40),
-          ],
+          ),
         ),
       ),
     );
@@ -136,11 +148,15 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildLogoutButton(BuildContext context) {
     return GestureDetector(
-       onTap: () {
-         // Handle Logout
-         // For now, let's navigate to welcome screen
-         Navigator.of(context).pushReplacementNamed('/welcome');
-       },
+      onTap: () async {
+        await FirebaseAuth.instance.signOut();
+        if (context.mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
+        }
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
@@ -166,14 +182,18 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildListTile(BuildContext context, {required IconData icon, required String text, required VoidCallback onTap}) {
+  Widget _buildListTile(BuildContext context,
+      {required IconData icon,
+      required String text,
+      required VoidCallback onTap}) {
     return ListTile(
       leading: Icon(icon, color: const Color(0xFF37C8C3)),
       title: Text(
         text,
         style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
       ),
-      trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+      trailing:
+          const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
       onTap: onTap,
     );
   }

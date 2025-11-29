@@ -22,11 +22,29 @@ dependencies:
   font_awesome_flutter: ^10.12.0
   url_launcher: ^6.3.2
   shimmer: ^3.0.0
+  firebase_core: ^4.2.1
+  cloud_firestore: ^6.1.0
+  firebase_auth: ^6.1.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: false
+  image_path: "assets/images/finotelogo.png"
+  min_sdk_android: 21
+
+flutter_native_splash:
+  color: "#121212"
+  image: "assets/images/finotelogo.png"
+  android_12:
+    image: "assets/images/finotelogo.png"
+    color: "#121212"
 
 flutter:
   uses-material-design: true

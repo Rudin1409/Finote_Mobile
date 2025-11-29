@@ -1,7 +1,14 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:myapp/widgets/add_income_form.dart'; // Import the form widget
+import 'package:myapp/widgets/add_income_form.dart';
+import 'package:myapp/core/theme/app_theme.dart';
+import 'package:myapp/widgets/transaction_card.dart';
+import 'package:myapp/core/services/firestore_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+
+import 'package:myapp/core/constants/app_constants.dart';
+import 'package:myapp/widgets/transfer_funds_form.dart';
 
 class IncomeScreen extends StatefulWidget {
   final Function(int) onNavigate;
@@ -12,31 +19,30 @@ class IncomeScreen extends StatefulWidget {
 }
 
 class _IncomeScreenState extends State<IncomeScreen> {
-
   final List<Map<String, dynamic>> _cardData = [
-      {
-        'type': 'Tunai',
-        'color': Colors.green,
-        'balance': '5.750,00',
-        'icon': Icons.money,
-        'isBalanceVisible': true,
-      },
-      {
-        'type': 'Bank',
-        'color': const Color(0xFF45C8B4),
-        'balance': '22.380,31',
-        'cardNumber': '8752  ••••  ••••  5672',
-        'icon': Icons.account_balance,
-        'isBalanceVisible': true,
-      },
-      {
-        'type': 'Dompet Digital',
-        'color': Colors.purple,
-        'balance': '1.234,56',
-        'icon': Icons.account_balance_wallet,
-        'isBalanceVisible': true,
-      },
-    ];
+    {
+      'type': 'Tunai',
+      'color': Colors.green,
+      'balance': '0,00',
+      'icon': Icons.money,
+      'isBalanceVisible': true,
+    },
+    {
+      'type': 'Bank',
+      'color': const Color(0xFF45C8B4),
+      'balance': '0,00',
+      'cardNumber': '****  ****  ****  ****',
+      'icon': Icons.account_balance,
+      'isBalanceVisible': true,
+    },
+    {
+      'type': 'Dompet Digital',
+      'color': Colors.purple,
+      'balance': '0,00',
+      'icon': Icons.account_balance_wallet,
+      'isBalanceVisible': true,
+    },
+  ];
 
   void _showAddIncomeForm(BuildContext context) {
     showModalBottomSheet(
@@ -53,39 +59,132 @@ class _IncomeScreenState extends State<IncomeScreen> {
       backgroundColor: const Color(0xFF1C1C1C),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1C1C1C),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => widget.onNavigate(2),
-        ),
         title: Text(
           'Pemasukan',
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: FinoteTextStyles.titleLarge,
         ),
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const TransferFundsForm(),
+                );
+              },
+              icon: const Icon(Icons.swap_horiz, size: 18, color: Colors.white),
+              label: Text('Transfer',
+                  style: GoogleFonts.poppins(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.add, color: Colors.white, size: 30),
             onPressed: () => _showAddIncomeForm(context),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 24),
-          _buildCardCarousel(),
-          const SizedBox(height: 24),
-          _buildHistoryList(),
-        ],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirestoreService().getTransactionsStream(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Terjadi kesalahan',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final allTransactions = snapshot.data?.docs ?? [];
+
+          // Calculate totals by source (Income - Expense)
+          double totalTunai = 0;
+          double totalBank = 0;
+          double totalEWallet = 0;
+
+          for (var doc in allTransactions) {
+            final data = doc.data() as Map<String, dynamic>;
+            final amount = (data['amount'] as num).toDouble();
+            final type = data['type'] as String;
+            final source = data['source'] as String? ?? 'other';
+
+            if (source == 'cash' || source == 'Tunai') {
+              if (type == 'income') {
+                totalTunai += amount;
+              } else {
+                totalTunai -= amount;
+              }
+            } else if (source == 'bank' || source == 'Bank') {
+              if (type == 'income') {
+                totalBank += amount;
+              } else {
+                totalBank -= amount;
+              }
+            } else if (source == 'digital-wallet' ||
+                source == 'Dompet Digital') {
+              if (type == 'income') {
+                totalEWallet += amount;
+              } else {
+                totalEWallet -= amount;
+              }
+            }
+          }
+
+          // Filter for history list (only show Income)
+          final incomeTransactions = allTransactions.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return data['type'] == 'income';
+          }).toList();
+
+          // Update card data
+          final currencyFormatter = NumberFormat.currency(
+              locale: 'id_ID', symbol: '', decimalDigits: 2);
+
+          // Assuming order: 0: Tunai, 1: Bank, 2: Dompet Digital based on _cardData init
+          _cardData[0]['balance'] = currencyFormatter.format(totalTunai);
+          _cardData[1]['balance'] = currencyFormatter.format(totalBank);
+          _cardData[2]['balance'] = currencyFormatter.format(totalEWallet);
+
+          return Column(
+            children: [
+              const SizedBox(height: 24),
+              _buildCardCarousel(),
+              const SizedBox(height: 24),
+              _buildHistoryList(incomeTransactions),
+            ],
+          );
+        },
       ),
     );
   }
 
   Widget _buildCardCarousel() {
     return SizedBox(
-      height: 180, // Adjusted height for the card
+      height: 180,
       child: PageView.builder(
         controller: PageController(viewportFraction: 0.85),
         itemCount: _cardData.length,
@@ -112,10 +211,8 @@ class _IncomeScreenState extends State<IncomeScreen> {
                 const SizedBox(width: 8),
                 Text(
                   data['type'] as String,
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xCCFFFFFF),
-                    fontSize: 16,
-                  ),
+                  style: FinoteTextStyles.bodyLarge
+                      .copyWith(color: Colors.white.withOpacity(0.8)),
                 ),
               ],
             ),
@@ -135,33 +232,42 @@ class _IncomeScreenState extends State<IncomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 if (data['isBalanceVisible'] as bool)
-                  RichText(
-                    text: TextSpan(
-                      style: GoogleFonts.poppins(color: Colors.white),
-                      children: <TextSpan>[
-                        const TextSpan(
-                          text: 'Rp ',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w300),
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: RichText(
+                        text: TextSpan(
+                          style: GoogleFonts.poppins(color: Colors.white),
+                          children: <TextSpan>[
+                            const TextSpan(
+                              text: 'Rp ',
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.w300),
+                            ),
+                            TextSpan(
+                              text: (data['balance'] as String).split(',')[0],
+                              style: const TextStyle(
+                                  fontSize: 36, fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(
+                              text:
+                                  ',${(data['balance'] as String).split(',')[1]}',
+                              style: const TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.w300),
+                            ),
+                          ],
                         ),
-                        TextSpan(
-                          text: (data['balance'] as String).split(',')[0],
-                          style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: ',${(data['balance'] as String).split(',')[1]}',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w300),
-                        ),
-                      ],
+                      ),
                     ),
                   )
                 else
                   Text(
                     'Rp ****',
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold
-                    ),
+                        color: Colors.white,
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold),
                   ),
                 Switch(
                   value: data['isBalanceVisible'] as bool,
@@ -181,14 +287,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
     );
   }
 
-   Widget _buildHistoryList() {
-    final List<Map<String, dynamic>> history = [
-      {'icon': Icons.work, 'title': 'Gaji Bulanan', 'date': '01 MAR, 2024', 'amount': '+ Rp 8.500.000', 'color': Colors.greenAccent},
-      {'icon': Icons.card_giftcard, 'title': 'Hadiah Ulang Tahun', 'date': '28 FEB, 2024', 'amount': '+ Rp 500.000', 'color': Colors.greenAccent},
-      {'icon': Icons.business_center, 'title': 'Proyek Freelance', 'date': '25 FEB, 2024', 'amount': '+ Rp 2.500.000', 'color': Colors.greenAccent},
-      {'icon': Icons.assessment, 'title': 'Dividen Saham', 'date': '20 FEB, 2024', 'amount': '+ Rp 750.000', 'color': Colors.greenAccent},
-    ];
-
+  Widget _buildHistoryList(List<QueryDocumentSnapshot> transactions) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
@@ -215,36 +314,113 @@ class _IncomeScreenState extends State<IncomeScreen> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.builder(
-                itemCount: history.length,
-                itemBuilder: (context, index) {
-                  final item = history[index];
-                  return Card(
-                    color: const Color(0xFF3B3B3B),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      leading: CircleAvatar(
-                        backgroundColor: const Color(0xFF37C8C3).withAlpha(25),
-                        child: Icon(item['icon'] as IconData, color: const Color(0xFF37C8C3), size: 22),
-                      ),
-                      title: Text(
-                        item['title'] as String,
-                        style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15),
-                      ),
-                      subtitle: Text(
-                        item['date'] as String,
-                        style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
-                      ),
-                      trailing: Text(
-                        item['amount'] as String,
-                        style: GoogleFonts.poppins(color: item['color'] as Color, fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
+              child: transactions.isEmpty
+                  ? Center(
+                      child: Text('Belum ada data pemasukan',
+                          style: FinoteTextStyles.bodyMedium))
+                  : ListView.builder(
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final data =
+                            transactions[index].data() as Map<String, dynamic>;
+                        final amount = (data['amount'] as num).toDouble();
+                        final date = (data['date'] as Timestamp).toDate();
+                        final formattedDate =
+                            DateFormat('dd MMM, yyyy').format(date);
+                        final currencyFormatter = NumberFormat.currency(
+                            locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+                        String categoryLabel = data['category'] ?? 'Pemasukan';
+                        try {
+                          final category = AppConstants.categories.firstWhere(
+                            (c) => c.value == data['category'],
+                          );
+                          categoryLabel = category.label;
+                        } catch (e) {
+                          // Keep original if not found (e.g. legacy data)
+                        }
+
+                        return TransactionCard(
+                          index: index,
+                          icon: Icons.arrow_downward,
+                          title: categoryLabel,
+                          subtitle: formattedDate,
+                          amount: '+ ${currencyFormatter.format(amount)}',
+                          amountColor: Colors.greenAccent,
+                          iconColor: FinoteColors.primary,
+                          onEdit: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => AddIncomeForm(
+                                transactionId: transactions[index].id,
+                                initialData: data,
+                              ),
+                            );
+                          },
+                          onDelete: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                backgroundColor: const Color(0xFF2F2F2F),
+                                title: Text('Hapus Transaksi?',
+                                    style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold)),
+                                content: Text(
+                                    'Apakah Anda yakin ingin menghapus transaksi ini?',
+                                    style: GoogleFonts.poppins(
+                                        color: Colors.white70)),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text('Batal',
+                                        style: GoogleFonts.poppins(
+                                            color: Colors.grey)),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      Navigator.pop(context);
+                                      try {
+                                        await FirestoreService()
+                                            .deleteTransaction(
+                                                transactions[index].id);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                  'Transaksi berhasil dihapus'),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content:
+                                                  Text('Gagal menghapus: $e'),
+                                              backgroundColor:
+                                                  FinoteColors.error,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    child: Text('Hapus',
+                                        style: GoogleFonts.poppins(
+                                            color: Colors.red)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),

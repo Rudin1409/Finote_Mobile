@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:myapp/features/savings/presentation/screens/savings_detail_screen.dart';
-import 'package:myapp/widgets/add_saving_form.dart'; // Import the form widget
+import 'package:myapp/widgets/add_saving_form.dart';
+import 'package:myapp/core/theme/app_theme.dart';
+import 'package:myapp/core/services/firestore_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
 
 class SavingsScreen extends StatelessWidget {
   final Function(int) onNavigate;
 
   const SavingsScreen({super.key, required this.onNavigate});
 
-  void _navigateToDetail(BuildContext context, String title) {
+  void _navigateToDetail(BuildContext context, String title, String savingId) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => SavingsDetailScreen(title: title),
+        builder: (context) =>
+            SavingsDetailScreen(title: title, savingId: savingId),
       ),
     );
   }
@@ -32,9 +39,9 @@ class SavingsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF1C1C1C),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1C1C1C),
+        backgroundColor: FinoteColors.background,
         elevation: 0,
-        title: Text('Tabungan', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('Tabungan', style: FinoteTextStyles.titleLarge),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => onNavigate(2), // Navigate back to Home
@@ -46,21 +53,87 @@ class SavingsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
-            child: _buildTotalSavings(primaryColor),
-          ),
-          Expanded(
-            child: _buildSavingsListContainer(context, primaryColor),
-          ),
-        ],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirestoreService().getSavingsStream(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Terjadi kesalahan',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Gagal memuat data. Silakan login ulang.',
+                    style: GoogleFonts.poppins(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF37C8C3),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                    ),
+                    child: Text(
+                      'Login Ulang',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final savings = snapshot.data?.docs ?? [];
+          double totalSavings = 0;
+          for (var doc in savings) {
+            final data = doc.data() as Map<String, dynamic>;
+            totalSavings += (data['currentAmount'] as num).toDouble();
+          }
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 20.0, horizontal: 20.0),
+                child: _buildTotalSavings(primaryColor, totalSavings),
+              ),
+              Expanded(
+                child:
+                    _buildSavingsListContainer(context, primaryColor, savings),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildTotalSavings(Color primaryColor) {
+  Widget _buildTotalSavings(Color primaryColor, double total) {
+    final currencyFormatter =
+        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
     return Column(
       children: [
         Icon(
@@ -70,155 +143,166 @@ class SavingsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          'Rp 12,902',
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontSize: 40,
-            fontWeight: FontWeight.bold,
-          ),
+          currencyFormatter.format(total),
+          style: FinoteTextStyles.displayLarge,
         ),
       ],
     );
   }
 
-    Widget _buildSavingsListContainer(BuildContext context, Color primaryColor) {
+  Widget _buildSavingsListContainer(BuildContext context, Color primaryColor,
+      List<QueryDocumentSnapshot> savings) {
     return Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF2F2F2F),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(40),
-            topRight: Radius.circular(40),
+      decoration: const BoxDecoration(
+        color: Color(0xFF2F2F2F),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(40),
+          topRight: Radius.circular(40),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(25, 25, 25, 20),
+            child: Text(
+              'JENIS JENIS TABUNGAN',
+              style: FinoteTextStyles.titleMedium
+                  .copyWith(color: FinoteColors.textSecondary),
+            ),
           ),
-        ),
-        child: Column(
-           crossAxisAlignment: CrossAxisAlignment.start,
-           children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(25, 25, 25, 20),
-                child: Text(
-                  'JENIS JENIS TABUNGAN',
-                  style: GoogleFonts.poppins(
-                    color: Colors.grey[400],
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  children: [
-                     GestureDetector(
-                        onTap: () => _navigateToDetail(context, 'Motor'),
-                        child: _buildSavingGoalCard(
-                          icon: Icons.two_wheeler,
-                          title: 'Motor',
-                          amountLeft: '\$300.00 LEFT',
-                          progress: 0.7,
-                          color: primaryColor,
-                        ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await Future.delayed(const Duration(seconds: 1));
+              },
+              child: savings.isEmpty
+                  ? SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Container(
+                        height: 400, // Ensure enough height to pull
+                        alignment: Alignment.center,
+                        child: Text('Belum ada tabungan',
+                            style: FinoteTextStyles.bodyMedium),
                       ),
-                      const SizedBox(height: 15),
-                      GestureDetector(
-                        onTap: () => _navigateToDetail(context, 'Leptop'),
-                        child: _buildSavingGoalCard(
-                          icon: Icons.laptop_mac,
-                          title: 'Leptop',
-                          amountLeft: '\$1,200.00 LEFT',
-                          progress: 0.4,
-                          color: primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      GestureDetector(
-                        onTap: () => _navigateToDetail(context, 'PC'),
-                        child: _buildSavingGoalCard(
-                          icon: Icons.desktop_windows,
-                          title: 'PC',
-                          amountLeft: '\$800.00 LEFT',
-                          progress: 0.9,
-                          color: primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                       GestureDetector(
-                        onTap: () => _navigateToDetail(context, 'PC'),
-                        child: _buildSavingGoalCard(
-                          icon: Icons.desktop_windows,
-                          title: 'PC',
-                          amountLeft: '\$800.00 LEFT',
-                          progress: 0.9,
-                          color: primaryColor,
-                        ),
-                      ),
-                  ],
-                ),
-              )
-           ],
-        ),
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                      itemCount: savings.length,
+                      itemBuilder: (context, index) {
+                        final data =
+                            savings[index].data() as Map<String, dynamic>;
+                        final target = (data['targetAmount'] as num).toDouble();
+                        final current =
+                            (data['currentAmount'] as num).toDouble();
+                        final progress = target > 0 ? current / target : 0.0;
+                        final remaining = target - current;
+                        final currencyFormatter = NumberFormat.currency(
+                            locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+                        return Column(
+                          children: [
+                            _buildAnimatedSavingCard(
+                              context,
+                              index,
+                              Icons.savings, // Default icon
+                              data['name'] ?? 'Tabungan',
+                              '${currencyFormatter.format(remaining)} TERSISA',
+                              progress,
+                              FinoteColors.primary,
+                              savings[index].id,
+                            ),
+                            const SizedBox(height: 15),
+                          ],
+                        );
+                      },
+                    ),
+            ),
+          )
+        ],
+      ),
     );
   }
 
-
-  Widget _buildSavingGoalCard({
-    required IconData icon,
-    required String title,
-    required String amountLeft,
-    required double progress,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1C),
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: Color(0xFF2F2F2F), 
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 28),
+  Widget _buildAnimatedSavingCard(
+    BuildContext context,
+    int index,
+    IconData icon,
+    String title,
+    String amountLeft,
+    double progress,
+    Color color,
+    String savingId,
+  ) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 400 + (index * 100)),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 50 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
           ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    backgroundColor: Colors.grey[800],
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  amountLeft,
-                  style: GoogleFonts.poppins(
-                    color: Colors.grey[400],
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
+        );
+      },
+      child: GestureDetector(
+        onTap: () => _navigateToDetail(context, title, savingId),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+          decoration: BoxDecoration(
+            color: FinoteColors.surface,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: FinoteTextStyles.titleMedium,
+                    ),
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 10,
+                        backgroundColor: Colors.grey[800],
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      amountLeft,
+                      style: FinoteTextStyles.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

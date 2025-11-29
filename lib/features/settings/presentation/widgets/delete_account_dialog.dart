@@ -1,9 +1,44 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
+
 class DeleteAccountDialog extends StatelessWidget {
   const DeleteAccountDialog({super.key});
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.delete();
+        if (context.mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+          );
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      String message = 'Gagal menghapus akun';
+      if (e.code == 'requires-recent-login') {
+        message = 'Silakan login ulang untuk menghapus akun';
+      }
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close dialog first
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Terjadi kesalahan: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,12 +77,7 @@ class DeleteAccountDialog extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () {
-                // Logic to delete account
-                Navigator.of(context).pop(); // Close the dialog
-                // Navigate to welcome screen after deletion
-                Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
-              },
+              onPressed: () => _deleteAccount(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red[700],
                 minimumSize: const Size(double.infinity, 50),
@@ -65,7 +95,8 @@ class DeleteAccountDialog extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(), // Just close the dialog
+              onPressed: () =>
+                  Navigator.of(context).pop(), // Just close the dialog
               child: Text(
                 'Batal',
                 style: GoogleFonts.poppins(

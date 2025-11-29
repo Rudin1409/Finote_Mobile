@@ -1,12 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:myapp/core/services/firestore_service.dart';
 import 'package:myapp/features/savings/presentation/screens/add_funds_screen.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class SavingsDetailScreen extends StatelessWidget {
+  final String savingId;
   final String title;
 
-  const SavingsDetailScreen({super.key, required this.title});
+  const SavingsDetailScreen({
+    super.key,
+    required this.savingId,
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,19 +29,68 @@ class SavingsDetailScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(title, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(title,
+            style: GoogleFonts.poppins(
+                color: Colors.white, fontWeight: FontWeight.bold)),
       ),
-      body: Column(
-        children: [
-          _buildHeader(context, primaryColor),
-          const SizedBox(height: 20),
-          _buildHistorySection(),
-        ],
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirestoreService().getSavingStream(savingId),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(child: Text('Data not found'));
+          }
+
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final currentAmount = (data['currentAmount'] as num).toDouble();
+          final targetAmount = (data['targetAmount'] as num).toDouble();
+          final percentage = (currentAmount / targetAmount).clamp(0.0, 1.0);
+          final entries = (data['entries'] as List<dynamic>?) ?? [];
+
+          // Sort entries by date descending
+          entries.sort((a, b) {
+            final dateA = (a['date'] as Timestamp).toDate();
+            final dateB = (b['date'] as Timestamp).toDate();
+            return dateB.compareTo(dateA);
+          });
+
+          final currencyFormatter = NumberFormat.currency(
+              locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+          final targetDate = data['targetDate'] != null
+              ? (data['targetDate'] as Timestamp).toDate()
+              : null;
+          final formattedTargetDate = targetDate != null
+              ? DateFormat('d MMM yyyy').format(targetDate)
+              : '-';
+
+          return Column(
+            children: [
+              _buildHeader(context, primaryColor, currentAmount, percentage,
+                  currencyFormatter, formattedTargetDate),
+              const SizedBox(height: 20),
+              _buildHistorySection(entries, currencyFormatter),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, Color primaryColor) {
+  Widget _buildHeader(
+      BuildContext context,
+      Color primaryColor,
+      double currentAmount,
+      double percentage,
+      NumberFormat formatter,
+      String targetDate) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
       child: Column(
@@ -42,20 +99,23 @@ class SavingsDetailScreen extends StatelessWidget {
             radius: 100.0,
             lineWidth: 20.0,
             animation: true,
-            percent: 0.6,
+            percent: percentage,
             center: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '60% tercapai',
-                  style: GoogleFonts.poppins(color: Colors.grey[400], fontSize: 16),
-                ),
-                Text(
-                  'Rp 655.00',
+                  '${(percentage * 100).toStringAsFixed(0)}% tercapai',
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+                      color: Colors.grey[400], fontSize: 16),
+                ),
+                FittedBox(
+                  child: Text(
+                    formatter.format(currentAmount),
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -66,7 +126,7 @@ class SavingsDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Target: 18 Oct 2028',
+            'Target: $targetDate',
             style: GoogleFonts.poppins(color: Colors.grey, fontSize: 16),
           ),
           const SizedBox(height: 30),
@@ -74,17 +134,25 @@ class SavingsDetailScreen extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AddFundsScreen(savingGoalName: title)),
+                MaterialPageRoute(
+                    builder: (context) => AddFundsScreen(
+                          savingGoalName: title,
+                          savingId: savingId,
+                        )),
               );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
               minimumSize: const Size(double.infinity, 55),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18)),
             ),
             child: Text(
               'TAMBAH DANA',
-              style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -92,26 +160,25 @@ class SavingsDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHistorySection() {
+  Widget _buildHistorySection(List<dynamic> entries, NumberFormat formatter) {
     return Expanded(
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(25.0),
         decoration: BoxDecoration(
-          color: const Color(0xFF2F2F2F),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(40),
-            topRight: Radius.circular(40),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(76),
-              spreadRadius: 5,
-              blurRadius: 15,
-              offset: const Offset(0, -5),
-            )
-          ]
-        ),
+            color: const Color(0xFF2F2F2F),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(40),
+              topRight: Radius.circular(40),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(76),
+                spreadRadius: 5,
+                blurRadius: 15,
+                offset: const Offset(0, -5),
+              )
+            ]),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -126,13 +193,19 @@ class SavingsDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: ListView.separated(
-                itemCount: 5, // Example count
-                separatorBuilder: (context, index) => const Divider(color: Colors.transparent, height: 15),
-                itemBuilder: (context, index) {
-                  return _buildHistoryItem();
-                },
-              ),
+              child: entries.isEmpty
+                  ? Center(
+                      child: Text('Belum ada riwayat',
+                          style: GoogleFonts.poppins(color: Colors.grey)))
+                  : ListView.separated(
+                      itemCount: entries.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(color: Colors.transparent, height: 15),
+                      itemBuilder: (context, index) {
+                        final entry = entries[index] as Map<String, dynamic>;
+                        return _buildHistoryItem(entry, formatter);
+                      },
+                    ),
             ),
           ],
         ),
@@ -140,7 +213,11 @@ class SavingsDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHistoryItem() {
+  Widget _buildHistoryItem(Map<String, dynamic> entry, NumberFormat formatter) {
+    final amount = (entry['amount'] as num).toDouble();
+    final date = (entry['date'] as Timestamp).toDate();
+    final formattedDate = DateFormat('d MMM, yyyy').format(date);
+
     return Row(
       children: [
         Container(
@@ -149,19 +226,30 @@ class SavingsDetailScreen extends StatelessWidget {
             color: Colors.grey[800],
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.account_balance, color: Color(0xFF37C8C3), size: 24),
+          child: const Icon(Icons.account_balance,
+              color: Color(0xFF37C8C3), size: 24),
         ),
         const SizedBox(width: 15),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Funds received', style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+            Text('Dana Masuk',
+                style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500)),
             const SizedBox(height: 4),
-            Text('17 FEB, 2018', style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 12)),
+            Text(formattedDate,
+                style:
+                    GoogleFonts.poppins(color: Colors.grey[500], fontSize: 12)),
           ],
         ),
         const Spacer(),
-        Text('+\$700.00', style: GoogleFonts.poppins(color: const Color(0xFF37C8C3), fontSize: 16, fontWeight: FontWeight.bold)),
+        Text('+${formatter.format(amount)}',
+            style: GoogleFonts.poppins(
+                color: const Color(0xFF37C8C3),
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
       ],
     );
   }

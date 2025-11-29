@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:myapp/screens/auth/welcome_screen.dart';
+import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
+import 'package:myapp/core/theme/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -13,6 +12,27 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   late PageController _pageController;
   int _pageIndex = 0;
+
+  final List<Map<String, dynamic>> demoData = [
+    {
+      "image": "assets/images/splash1.png",
+      "title": "Kelola Keuangan Anda\ndengan Mudah",
+      "description":
+          "Lacak pemasukan dan pengeluaran Anda dengan mudah. Dapatkan wawasan tentang kebiasaan belanja Anda.",
+    },
+    {
+      "image": "assets/images/splash3.png",
+      "title": "Tetapkan Tujuan Tabungan\n& Pantau Hutang",
+      "description":
+          "Tetapkan tujuan tabungan yang realistis dan pantau pembayaran hutang Anda agar tetap pada jalurnya.",
+    },
+    {
+      "image": "assets/images/splash4.png",
+      "title": "Analisis Keuangan\nBertenaga AI",
+      "description":
+          "Dapatkan saran dan wawasan yang dipersonalisasi dari asisten AI canggih kami untuk mengoptimalkan keuangan Anda.",
+    },
+  ];
 
   @override
   void initState() {
@@ -29,191 +49,129 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: FinoteColors.background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: demoData.length,
-                  onPageChanged: (index) {
-                    setState(() {
-                      _pageIndex = index;
-                    });
-                  },
-                  itemBuilder: (context, index) => OnboardingContent(
-                    image: demoData[index].image,
-                    title: demoData[index].title,
-                    description: demoData[index].description,
-                  ),
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: demoData.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _pageIndex = index;
+                  });
+                },
+                itemBuilder: (context, index) => OnboardContent(
+                  image: demoData[index]["image"],
+                  title: demoData[index]["title"],
+                  description: demoData[index]["description"],
                 ),
               ),
-              Row(
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  SizedBox(
-                    height: 60,
-                    width: 60,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_pageIndex > 0) {
-                          _pageController.previousPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.ease,
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        shape: const CircleBorder(),
-                        backgroundColor: Colors.transparent,
-                        side: const BorderSide(color: Color(0xFF37C8C3)),
-                      ),
-                      child: const Icon(Icons.arrow_back, color: Color(0xFF37C8C3)),
-                    ),
-                  ),
+                  // Dot Indicators
                   Row(
                     children: List.generate(
                       demoData.length,
                       (index) => Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: DotIndicator(isActive: index == _pageIndex),
+                        padding: const EdgeInsets.only(right: 6),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          height: 8,
+                          width: _pageIndex == index ? 24 : 8,
+                          decoration: BoxDecoration(
+                            color: _pageIndex == index
+                                ? FinoteColors.primary
+                                : FinoteColors.surface,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  SizedBox(
-                    height: 60,
-                    width: 60,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_pageIndex < demoData.length - 1) {
-                          _pageController.nextPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.ease,
-                          );
-                        } else {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        shape: const CircleBorder(),
-                        backgroundColor: const Color(0xFF37C8C3),
-                      ),
-                      child: const Icon(Icons.arrow_forward, color: Colors.black),
+                  // Next/Get Started Button
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_pageIndex == demoData.length - 1) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginScreen()),
+                        );
+                      } else {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.ease,
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(20),
+                      backgroundColor: FinoteColors.primary,
+                    ),
+                    child: Icon(
+                      _pageIndex == demoData.length - 1
+                          ? Icons.check
+                          : Icons.arrow_forward,
+                      color: Colors.black,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-                  );
-                },
-                child: Text(
-                  'Skip',
-                  style: GoogleFonts.poppins(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class DotIndicator extends StatelessWidget {
-  const DotIndicator({super.key, this.isActive = false});
-
-  final bool isActive;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      height: isActive ? 12 : 4,
-      width: 4,
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF37C8C3) : Colors.white54,
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-      ),
-    );
-  }
-}
-
-class Onboard {
-  final String image, title, description;
-
-  Onboard({
-    required this.image,
-    required this.title,
-    required this.description,
-  });
-}
-
-final List<Onboard> demoData = [
-  Onboard(
-    image: 'assets/images/splash1.png',
-    title: 'Selamat Datang di Finote!',
-    description: 'Aplikasi pencatat keuangan terbaik untuk masa depan finansialmu.',
-  ),
-  Onboard(
-    image: 'assets/images/splash3.png',
-    title: 'Catat Setiap Transaksi',
-    description: 'Jangan biarkan ada pengeluaran atau pemasukan yang terlewat.',
-  ),
-  Onboard(
-    image: 'assets/images/splash4.png',
-    title: 'Rencanakan Keuanganmu',
-    description: 'Buat anggaran dan capai tujuan finansialmu dengan lebih mudah.',
-  ),
-];
-
-class OnboardingContent extends StatelessWidget {
-  const OnboardingContent({
+class OnboardContent extends StatelessWidget {
+  const OnboardContent({
     super.key,
     required this.image,
     required this.title,
     required this.description,
   });
 
-  final String image, title, description;
+  final String image;
+  final String title;
+  final String description;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Spacer(),
-        Image.asset(image, height: 250),
-        const Spacer(),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(),
+          Image.asset(
+            image,
+            height: 250,
           ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          description,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            color: Colors.white70,
+          const Spacer(),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: FinoteTextStyles.displayLarge.copyWith(fontSize: 28),
           ),
-        ),
-        const Spacer(),
-      ],
+          const SizedBox(height: 16),
+          Text(
+            description,
+            textAlign: TextAlign.center,
+            style: FinoteTextStyles.bodyLarge
+                .copyWith(color: FinoteColors.textSecondary),
+          ),
+          const Spacer(),
+        ],
+      ),
     );
   }
 }
