@@ -1,83 +1,89 @@
-# 💰 Fin-Resto: Aplikasi Manajemen Keuangan (Flutter)
+# ✍️ FINOTE: Financial Note (Aplikasi Pencatat Keuangan)
 
-Aplikasi Fin-Resto (Financial-Restoran) adalah solusi manajemen keuangan pribadi yang dibangun menggunakan **Flutter**. Proyek ini didesain dengan struktur yang modular dan rapi.
+Selamat datang di proyek **FINOTE**, sebuah aplikasi manajemen keuangan pribadi yang dibangun menggunakan framework **Flutter**. Aplikasi ini didesain dengan arsitektur yang bersih, modular, dan berfokus pada kemudahan pengembangan.
 
-Untuk mempermudah pemahaman bagi pemula, kami menggunakan analogi **Restoran Digital** untuk menjelaskan setiap bagian dari proyek ini.
+Untuk membantu pemula memahami struktur proyek, kami menggunakan analogi **"Restoran Digital"** yang berfungsi sebagai panduan arsitektur.
 
 ---
 
-## 🍽️ 1. Peta Lokasi Restoran: Struktur Folder Utama
+## 🍽️ 1. Kompleks Restoran: Struktur Folder Utama Proyek
 
-Bayangkan folder utama proyek ini sebagai **Kompleks Restoran** kita. Setiap folder memiliki fungsi dan tugasnya masing-masing.
+Struktur folder utama adalah 'peta' dari seluruh proyek kita. Setiap folder adalah sebuah 'departemen' dengan fungsi spesifik.
 
-| Folder/File | Analogi Restoran | Penjelasan untuk Pemula (Kenapa Penting?) |
+| Folder/File | Analogi Restoran | Fungsi & Keterangan Rinci (Penting untuk Pemula) |
 | :--- | :--- | :--- |
-| **`android/`** | **Dapur Khusus Masakan Android 🤖** | Ini adalah tempat konfigurasi agar aplikasi bisa jalan di HP **Android** (Samsung, Xiaomi, dll.). Flutter itu pintar, dia bisa membuat satu kode untuk Android dan iPhone. Folder ini berisi **bumbu-bumbu rahasia** agar kode kita 'matang' sempurna di Android. |
-| **`lib/`** | **Ruang Utama & Resep Rahasia 🧑‍🍳** | **99% kode kita ada di sini!** Di sinilah kita 'memasak' tampilan (UI/UX), mengatur logika, dan alur aplikasi. Jika Anda ingin mengubah tampilan, ini adalah tempatnya. |
-| **`assets/`** | **Gudang Dekorasi ✨** | Tempat menyimpan semua **dekorasi** restoran kita: gambar-gambar (logo, ikon), jenis huruf khusus (font), atau file lain yang dipakai untuk mempercantik aplikasi. |
-| **`pubspec.yaml`** | **Daftar Belanja 📝** | **File Paling Penting!** Di sini kita mencatat semua **bahan-bahan tambahan** (disebut *libraries* atau *dependencies*) yang kita butuhkan. Contoh: "Saya butuh `firebase_auth` untuk login", "Saya butuh `google_fonts` untuk tulisan bagus". Kalau tidak dicatat di sini, aplikasi tidak bisa menggunakan fitur itu. |
-| **`firebase_options.dart`** | **Kunci Keamanan / Kartu Akses 🔑** | Dibuat otomatis saat kita menghubungkan aplikasi ke Google Firebase. Isinya adalah kode rahasia agar aplikasi kita **boleh** berbicara dan bertukar data dengan database online (server Firebase). |
+| **`android/`** | **Dapur Khusus Masakan Android 🤖** | Berisi semua konfigurasi (file Manifest, Gradles) agar kode Flutter dapat dikompilasi (diubah) menjadi file `.apk` dan berjalan sempurna di HP **Android**. Jika ada masalah izin (permissions) khusus Android, Anda akan bekerja di sini. |
+| **`ios/`** | **Dapur Khusus Masakan Apple 🍎** | Sama seperti `android/`, tetapi untuk perangkat **iPhone/iPad** (iOS). Folder ini berisi konfigurasi Xcode dan izin Apple. Kita jarang menyentuhnya, kecuali saat akan *deploy* ke App Store. |
+| **`lib/`** | **Ruang Utama & Resep Rahasia 🧑‍🍳 (Jantung Proyek)** | **99% dari kode aplikasi berada di sini.** Semua logika bisnis, tampilan antarmuka (UI), dan *State Management* (pengelolaan data) diatur di dalam folder ini. Inilah fokus utama kita. |
+| **`assets/`** | **Gudang Dekorasi & Bahan Baku Statis ✨** | Tempat penyimpanan semua aset statis yang digunakan aplikasi, seperti: `images/` (logo, ikon, ilustrasi), `fonts/` (jenis huruf khusus), atau `files/` (data JSON lokal). **Aset tidak akan muncul jika tidak didaftarkan di `pubspec.yaml`.** |
+| **`pubspec.yaml`** | **Daftar Belanja & Kontrak Proyek 📝** | **File PENTING.** Ini adalah *manifest* proyek. Di sini kita mencatat 1) **Dependencies** (library pihak ketiga seperti Firebase, penyedia font), 2) **Dev Dependencies** (alat bantu developer), dan 3) **Aset** yang didaftarkan dari folder `assets/`. |
+| **`test/`** | **Ruang Uji Coba Masakan 🔬** | Berisi kode untuk pengujian (*Unit Testing* dan *Widget Testing*). Penting untuk memastikan setiap resep (fungsi kode) berjalan sesuai yang diharapkan dan tidak merusak resep lain. |
 
 ---
 
-## 🔪 2. Bedah Jantung Aplikasi: Isi Folder `lib/`
+## 🔪 2. Membedah Ruang Utama: Isi Folder `lib/`
 
-Folder **`lib/`** adalah **Jantung** dari seluruh aplikasi kita. Di dalamnya terdapat pembagian tugas yang sangat rapi.
+Folder **`lib/`** dibagi menjadi bagian-bagian yang sangat terstruktur untuk memisahkan tanggung jawab (prinsip *Separation of Concerns*).
 
-### A. `main.dart`: Pintu Depan 🚪
+### A. Pintu Masuk dan Kunci Utama
 
-* **Pintu Depan Restoran.**
-* Ini adalah file yang **pertama kali dibuka** saat pengguna menekan ikon aplikasi.
-* Tugasnya: **Menyambut** pengguna. Mengecek apakah pengguna sudah login atau belum, lalu mengarahkan mereka ke ruangan yang tepat (ke **`Login Screen`** atau langsung ke **`Home Screen`**).
+* **`main.dart` (Pintu Depan Restoran)**
+    * **Tugas Utama:** File ini adalah titik awal eksekusi aplikasi (`void main()`).
+    * **Fungsi Rinci:** Inisialisasi Firebase, menyiapkan *State Management* global (misalnya provider atau BLoC), dan menentukan rute awal (apakah pengguna diarahkan ke Login atau Home, tergantung status autentikasi).
+* **`firebase_options.dart` (Kunci Keamanan)**
+    * Berisi kode-kode inisialisasi yang menghubungkan aplikasi secara aman ke layanan **Google Firebase** (Firestore, Authentication, dll.).
 
-### B. `core/`: Peralatan Dapur Umum 🔧
+### B. `core/`: Fondasi & Peralatan Dapur Universal 🔧
 
-Berisi alat-alat dasar yang **bisa dipakai oleh siapa saja** di seluruh aplikasi.
+Berisi alat-alat yang berfungsi sebagai *shared resources* dan dapat diakses dari mana saja di aplikasi.
 
-* **`core/constants/` (Buku Catatan Tetap):**
-    * Isinya hal-hal yang tidak pernah berubah: **warna-warna utama** aplikasi (misalnya warna biru untuk tombol), daftar nama kategori yang sudah pasti (`Gaji`, `Tagihan`), atau ukuran margin standar.
-* **`core/services/` (Pelayan Khusus 🙋):**
-    * Contohnya `firestore_service.dart`. Pelayan ini punya **satu tugas khusus**: bolak-balik mengambil data dari database online (**Firebase**) dan memberikannya ke tampilan aplikasi. Halaman lain **tidak perlu pusing** memikirkan cara mengambil data, cukup panggil pelayan ini.
-* **`core/theme/` (Buku Dekorasi Standar):**
-    * Mengatur gaya tulisan (font), warna tombol, dan tema gelap/terang secara **global** (berlaku untuk seluruh aplikasi).
-
-### C. `features/`: Ruangan-Ruangan VIP (Berdasarkan Fitur) 🛋️
-
-Ini adalah bagian paling rapi. Aplikasi dibagi berdasarkan **Fitur**, di mana setiap fitur memiliki ruang (folder) sendiri agar kodenya tidak campur aduk (disebut *Modular*).
-
-| Folder Fitur | Analogi Restoran | Fungsi Utama (Apa yang Dilakukan?) |
+| Folder | Analogi Restoran | Fungsi Rinci dan Contoh Penggunaan |
 | :--- | :--- | :--- |
-| **`auth/`** | **Ruang Resepsionis** | Mengurus pendaftaran tamu. Berisi halaman **Login**, **Daftar** (Sign-up), dan **Lupa Password** (mengurus autentikasi pengguna). |
-| **`home/`** | **Ruang Makan Utama** | Tampilan awal setelah login. Menampilkan ringkasan saldo, dashboard, dan menu utama yang bisa diklik. |
-| **`income/` & `expense/`** | **Kasir Pemasukan & Pengeluaran** | Tempat mencatat uang masuk dan keluar. Berisi halaman **form input** untuk memasukkan angka, memilih kategori, dan menyimpan data transaksi. |
-| **`ai_analysis/`** | **Ruang Konsultasi 🧠** | Fitur pintar aplikasi. Berisi halaman **laporan keuangan** (`financial_report_screen.dart`) yang nanti akan kita hubungkan dengan **AI (Gemini)** untuk memberikan saran keuangan. |
-| **`settings/`** | **Ruang Manager** | Tempat mengatur profil, ganti password, atau keluar dari akun (logout). |
+| **`core/constants/`** | **Buku Catatan Tetap/Standar** | Menyimpan nilai-nilai yang tidak akan berubah: kode warna HEX utama (`AppColors`), *API Keys*, dan daftar statis seperti kategori transaksi standar (`Kategori.list`). |
+| **`core/services/`** | **Pelayan Khusus/Petugas Logistik 🙋** | Berisi kelas-kelas yang menangani **interaksi eksternal**. Contoh: `firestore_service.dart` (mengirim/menerima data ke/dari database) atau `api_service.dart` (jika ada integrasi API pihak ketiga). |
+| **`core/theme/`** | **Buku Dekorasi Standar** | Mendefinisikan `ThemeData` untuk aplikasi: gaya teks (`TextTheme`), warna tombol (`ButtonTheme`), dan skema warna gelap/terang. Memastikan tampilan konsisten di seluruh aplikasi. |
+| **`core/utils/`** | **Alat Bantu Umum** | Fungsi-fungsi kecil yang membantu, seperti `formatCurrency()` atau `dateFormatter()`. |
 
-### D. `widgets/`: Perabotan Kecil 🖼️
+### C. `features/`: Ruangan-Ruangan VIP (Fitur Modular) 🛋️
 
-* Berisi komponen-komponen tampilan kecil yang **dipakai berulang-ulang**.
-* **Contoh:** Kita membuat desain "Kartu Transaksi" (`transaction_card.dart`) yang cantik **satu kali**. Daripada mengkode ulang di halaman Home, Pemasukan, dan Pengeluaran, kita cukup **memanggil** widget ini dan memasangnya di mana-mana. Ini membuat kode kita **hemat waktu dan konsisten** (tidak ada desain yang berbeda).
+Implementasi dari prinsip modularitas. Setiap fitur memiliki ruangnya sendiri, yang biasanya dibagi lagi menjadi model, view, dan controller/logic.
+
+| Folder Fitur | Analogi Restoran | Tanggung Jawab Utama |
+| :--- | :--- | :--- |
+| **`auth/`** | **Ruang Resepsionis** | Mengelola semua hal terkait pengguna: Pendaftaran, Login, Logout, Reset Password, dan penyimpanan status sesi pengguna. |
+| **`home/`** | **Ruang Makan Utama (Dashboard)** | Menampilkan ringkasan data (saldo total, grafik mini), navigasi cepat, dan alur utama pengguna setelah berhasil login. |
+| **`income/` & `expense/`** | **Kasir Pemasukan & Pengeluaran** | Fitur inti aplikasi. Mengelola *CRUD* (Create, Read, Update, Delete) untuk data transaksi, termasuk formulir input dan daftar riwayat transaksi. |
+| **`ai_analysis/`** | **Ruang Konsultasi Keuangan 🧠** | Menangani logika analisis data. Di sinilah integrasi dengan **Gemini AI** akan ditempatkan untuk memberikan rekomendasi dan laporan keuangan yang mendalam. |
+| **`settings/`** | **Ruang Manager** | Pengaturan aplikasi (tema, notifikasi, bahasa) dan manajemen akun pengguna (ubah profil/password). |
+
+### D. `widgets/`: Perabotan Siap Pakai 🖼️
+
+* Berisi komponen-komponen antarmuka (Widget) yang dapat digunakan **berulang kali** di berbagai fitur.
+* **Tujuannya:** Menghindari pengulangan kode (*Don't Repeat Yourself / DRY*).
+* **Contoh:** `CustomButton.dart`, `TransactionCard.dart`, `AppDrawer.dart`. Komponen ini hanya fokus pada tampilan dan menerima data untuk ditampilkan.
 
 ---
 
-## 🚀 3. Ringkasan Alur Kerja Cepat
+## 🧭 3. Alur Kerja & Ekosistem Data
 
-Ini adalah langkah-langkah yang terjadi di balik layar saat aplikasi digunakan:
+Pahami bagaimana data bergerak di dalam aplikasi Anda:
 
-1.  **Buka Aplikasi:** $\rightarrow$ File **`main.dart`** jalan.
-2.  **Cek Login:** $\rightarrow$ Jika belum, diarahkan ke **`features/auth/login_screen.dart`**.
-3.  **Login Berhasil:** $\rightarrow$ Masuk ke **`features/home/home_screen.dart`**.
-4.  **Mau Catat Gaji?** $\rightarrow$ Klik tombol tambah $\rightarrow$ Muncul form di **`features/income/add_income_form.dart`** (yang menggunakan perabotan dari `widgets/`).
-5.  **Simpan Data:** $\rightarrow$ Form memanggil **Pelayan Khusus** di **`core/services/firestore_service.dart`** $\rightarrow$ Data dikirim ke server Firebase.
-6.  **Mau Lihat Laporan?** $\rightarrow$ Masuk ke **`features/ai_analysis/financial_report_screen.dart`**.
+1.  **Start:** Pengguna membuka aplikasi $\rightarrow$ **`main.dart`** jalan.
+2.  **Tampilan:** Pengguna melihat `home_screen.dart` (di `features/home/`).
+3.  **Aksi:** Pengguna menekan tombol "Tambah Pengeluaran".
+4.  **Logika:** Form Pengeluaran (di `features/expense/`) mendapatkan input dari pengguna.
+5.  **Penyimpanan:** Form memanggil fungsi `addData()` di **`core/services/firestore_service.dart`**.
+6.  **Eksternal:** `firestore_service` mengirimkan data ke **Firebase** (database online).
+7.  **Pembaharuan Tampilan:** Setelah data tersimpan, *State Management* memperbarui data yang ditampilkan di `home_screen.dart` secara otomatis.
 
 ---
 
-## 🛠️ Kesimpulan Praktis: Tips untuk Pemula
+## 🧑‍💻 Tips Cepat untuk Developer FINOTE
 
-| Jika Anda Ingin... | Cari File di Folder... |
+| Tugas yang Ingin Anda Lakukan | Lokasi File yang Perlu Anda Cari |
 | :--- | :--- |
-| **Mengubah Tampilan** (Warna, Posisi Tombol, Layout) | **`features/nama_fitur/`** (Contoh: `home/home_screen.dart`). |
-| **Mengubah Logika Data** (Cara simpan ke database) | **`core/services/`** (Contoh: `firestore_service.dart`). |
-| **Menambah Library/Fitur Baru** | Edit file **`pubspec.yaml`**. |
-| **Mengubah Desain Komponen Kecil** (Contoh: Kartu Transaksi) | **`widgets/`**. |
+| **Mengubah Tampilan** (Layout, Warna Tombol) | File `_screen.dart` atau `_view.dart` di dalam folder **`features/nama_fitur/`**. |
+| **Mengubah Cara Data Diambil/Disimpan** | Folder **`core/services/`** (contoh: `firestore_service.dart`). |
+| **Membuat Komponen UI Baru yang Bisa Dipakai Ulang** | Folder **`widgets/`**. |
+| **Menambah Pustaka/API Baru** | Edit file **`pubspec.yaml`**. |
+| **Mengubah Warna/Font Global Aplikasi** | Folder **`core/theme/`**. |
