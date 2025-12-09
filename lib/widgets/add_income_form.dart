@@ -125,9 +125,9 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
       heightFactor: 0.9,
       child: Container(
         padding: const EdgeInsets.all(24.0),
-        decoration: const BoxDecoration(
-          color: Color(0xFF2F2F2F),
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),
           ),
@@ -145,12 +145,13 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                     Text(
                       isEditing ? 'Edit Pemasukan' : 'Tambah Pemasukan',
                       style: GoogleFonts.poppins(
-                          color: Colors.white,
+                          color: Theme.of(context).textTheme.titleLarge?.color,
                           fontSize: 20,
                           fontWeight: FontWeight.bold),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: Icon(Icons.close,
+                          color: Theme.of(context).iconTheme.color),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
@@ -159,11 +160,17 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                   isEditing
                       ? 'Perbarui data pemasukan Anda.'
                       : 'Catat semua sumber pemasukan Anda di sini.',
-                  style:
-                      GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
+                  style: GoogleFonts.poppins(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.7),
+                      fontSize: 14),
                 ),
                 const SizedBox(height: 24),
                 _buildTextFormField(
+                  context: context,
                   label: 'Jumlah (IDR)',
                   hint: 'Ex : 5000',
                   keyboardType: TextInputType.number,
@@ -171,12 +178,14 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                 ),
                 const SizedBox(height: 16),
                 _buildTextFormField(
+                  context: context,
                   label: 'Deskripsi',
                   hint: 'Ex : Gajian',
                   controller: _descriptionController,
                 ),
                 const SizedBox(height: 16),
                 _buildDropdownField(
+                  context: context,
                   label: 'Kategori Pemasukan',
                   hint: 'Pilih Kategori',
                   value: _selectedCategory,
@@ -186,9 +195,13 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                             value: c.value,
                             child: Row(
                               children: [
-                                Icon(c.icon, size: 18, color: Colors.white70),
+                                Icon(c.icon,
+                                    size: 18,
+                                    color: Theme.of(context).iconTheme.color),
                                 const SizedBox(width: 8),
-                                Text(c.label),
+                                Text(c.label,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium),
                               ],
                             ),
                           ))
@@ -201,6 +214,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                 ),
                 const SizedBox(height: 16),
                 _buildDropdownField(
+                  context: context,
                   label: 'Sumber Dana',
                   hint: 'Pilih Sumber Dana',
                   value: _selectedSource,
@@ -209,9 +223,13 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                             value: s.value,
                             child: Row(
                               children: [
-                                Icon(s.icon, size: 18, color: Colors.white70),
+                                Icon(s.icon,
+                                    size: 18,
+                                    color: Theme.of(context).iconTheme.color),
                                 const SizedBox(width: 8),
-                                Text(s.label),
+                                Text(s.label,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium),
                               ],
                             ),
                           ))
@@ -263,27 +281,37 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   }
 
   Widget _buildTextFormField({
+    required BuildContext context,
     required String label,
     required String hint,
     TextInputType? keyboardType,
     required TextEditingController controller,
   }) {
     const primaryColor = Color(0xFF37C8C3);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14)),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(color: Colors.white54),
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.5)),
             filled: true,
-            fillColor: Colors.grey[800],
+            fillColor: isDark ? Colors.grey[800] : Colors.grey[200],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: primaryColor, width: 2),
@@ -310,6 +338,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   }
 
   Widget _buildDropdownField({
+    required BuildContext context,
     required String label,
     required String hint,
     required List<DropdownMenuItem<String>> items,
@@ -317,22 +346,32 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
     required void Function(String?) onChanged,
   }) {
     const primaryColor = Color(0xFF37C8C3);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14)),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           initialValue: value,
-          hint: Text(hint, style: GoogleFonts.poppins(color: Colors.white54)),
+          hint: Text(hint,
+              style: GoogleFonts.poppins(
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withOpacity(0.5))),
           isExpanded: true,
-          dropdownColor: Colors.grey[800],
-          style: GoogleFonts.poppins(color: Colors.white),
+          dropdownColor: Theme.of(context).cardColor,
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           icon: const Icon(Icons.arrow_drop_down, color: primaryColor),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.grey[800],
+            fillColor: isDark ? Colors.grey[800] : Colors.grey[200],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: primaryColor, width: 2),
@@ -362,21 +401,30 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
 
   Widget _buildDateField(BuildContext context, String label) {
     const primaryColor = Color(0xFF37C8C3);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14)),
         const SizedBox(height: 8),
         TextFormField(
           controller: _dateController,
           readOnly: true,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: 'Pilih Tanggal',
-            hintStyle: GoogleFonts.poppins(color: Colors.white54),
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.5)),
             filled: true,
-            fillColor: Colors.grey[800],
+            fillColor: isDark ? Colors.grey[800] : Colors.grey[200],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: primaryColor, width: 2),
@@ -398,6 +446,24 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
               initialDate: DateTime.now(),
               firstDate: DateTime(2000),
               lastDate: DateTime(2101),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: Theme.of(context).colorScheme.copyWith(
+                          primary: const Color(0xFF37C8C3),
+                          onPrimary: Colors.white,
+                          onSurface:
+                              Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF37C8C3),
+                      ),
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
             );
             if (pickedDate != null) {
               String formattedDate =

@@ -59,14 +59,14 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF37C8C3), // header background color
-              onPrimary: Colors.white, // header text color
-              onSurface: Colors.white, // body text color
-            ),
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: const Color(0xFF37C8C3),
+                  onPrimary: Colors.white,
+                  onSurface: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF37C8C3), // button text color
+                foregroundColor: const Color(0xFF37C8C3),
               ),
             ),
           ),
@@ -122,7 +122,10 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                   widget.transactionId != null
                       ? 'Pengeluaran berhasil diperbarui'
                       : 'Pengeluaran berhasil disimpan',
-                  style: FinoteTextStyles.bodyMedium),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white)),
               backgroundColor: Colors.green,
             ),
           );
@@ -133,7 +136,10 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Gagal menyimpan: $e',
-                  style: FinoteTextStyles.bodyMedium),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white)),
               backgroundColor: FinoteColors.error,
             ),
           );
@@ -156,9 +162,9 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
       heightFactor: 0.9,
       child: Container(
         padding: const EdgeInsets.all(24.0),
-        decoration: const BoxDecoration(
-          color: Color(0xFF2F2F2F),
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),
           ),
@@ -178,11 +184,12 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                       style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).textTheme.titleLarge?.color,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: Icon(Icons.close,
+                          color: Theme.of(context).iconTheme.color),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
@@ -191,11 +198,17 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                   isEditing
                       ? 'Perbarui data pengeluaran Anda.'
                       : 'Catat semua pengeluaran Anda di sini untuk melacak keuangan.',
-                  style:
-                      GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
+                  style: GoogleFonts.poppins(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.7),
+                      fontSize: 14),
                 ),
                 const SizedBox(height: 24),
                 _buildTextField(
+                  context,
                   controller: _amountController,
                   labelText: 'Jumlah (IDR)',
                   hintText: 'Ex: 5000',
@@ -203,12 +216,14 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
+                  context,
                   controller: _descriptionController,
                   labelText: 'Deskripsi',
                   hintText: 'Ex: Jajan',
                 ),
                 const SizedBox(height: 16),
                 _buildDropdownField(
+                  context,
                   labelText: 'Kategori Pengeluaran',
                   hintText: 'Pilih Kategori',
                   value: _selectedCategory,
@@ -218,9 +233,13 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                             value: c.value,
                             child: Row(
                               children: [
-                                Icon(c.icon, size: 18, color: Colors.white70),
+                                Icon(c.icon,
+                                    size: 18,
+                                    color: Theme.of(context).iconTheme.color),
                                 const SizedBox(width: 8),
-                                Text(c.label),
+                                Text(c.label,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium),
                               ],
                             ),
                           ))
@@ -233,6 +252,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                 ),
                 const SizedBox(height: 16),
                 _buildDropdownField(
+                  context,
                   labelText: 'Sumber Dana',
                   hintText: 'Pilih Sumber Dana',
                   value: _selectedSource,
@@ -241,9 +261,13 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                             value: s.value,
                             child: Row(
                               children: [
-                                Icon(s.icon, size: 18, color: Colors.white70),
+                                Icon(s.icon,
+                                    size: 18,
+                                    color: Theme.of(context).iconTheme.color),
                                 const SizedBox(width: 8),
-                                Text(s.label),
+                                Text(s.label,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium),
                               ],
                             ),
                           ))
@@ -256,6 +280,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                 ),
                 const SizedBox(height: 16),
                 _buildDateField(
+                    context: context,
                     controller: _dateController,
                     labelText: 'Tanggal',
                     onTap: _selectDate),
@@ -297,30 +322,40 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildTextField(
+    BuildContext context, {
     required TextEditingController controller,
     required String labelText,
     required String hintText,
     TextInputType keyboardType = TextInputType.text,
   }) {
     const primaryColor = Color(0xFF37C8C3);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           labelText,
-          style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+              fontSize: 14),
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: GoogleFonts.poppins(color: Colors.white54),
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.5)),
             filled: true,
-            fillColor: Colors.grey[800],
+            fillColor: isDark ? Colors.grey[800] : Colors.grey[200],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: primaryColor, width: 2),
@@ -346,7 +381,8 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
     );
   }
 
-  Widget _buildDropdownField({
+  Widget _buildDropdownField(
+    BuildContext context, {
     required String labelText,
     required String hintText,
     required String? value,
@@ -354,23 +390,32 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
     required ValueChanged<String?> onChanged,
   }) {
     const primaryColor = Color(0xFF37C8C3);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(labelText,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14)),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           initialValue: value,
-          hint:
-              Text(hintText, style: GoogleFonts.poppins(color: Colors.white54)),
+          hint: Text(hintText,
+              style: GoogleFonts.poppins(
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withOpacity(0.5))),
           isExpanded: true,
-          dropdownColor: Colors.grey[800],
-          style: GoogleFonts.poppins(color: Colors.white),
+          dropdownColor: Theme.of(context).cardColor,
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           icon: const Icon(Icons.arrow_drop_down, color: primaryColor),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.grey[800],
+            fillColor: isDark ? Colors.grey[800] : Colors.grey[200],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: primaryColor, width: 2),
@@ -399,27 +444,37 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
   }
 
   Widget _buildDateField({
+    required BuildContext context,
     required TextEditingController controller,
     required String labelText,
     required VoidCallback onTap,
   }) {
     const primaryColor = Color(0xFF37C8C3);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(labelText,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14)),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           readOnly: true,
           onTap: onTap,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: 'Pilih Tanggal',
-            hintStyle: GoogleFonts.poppins(color: Colors.white54),
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.5)),
             filled: true,
-            fillColor: Colors.grey[800],
+            fillColor: isDark ? Colors.grey[800] : Colors.grey[200],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: primaryColor, width: 2),

@@ -6,7 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:myapp/core/services/firestore_service.dart';
 
 class FinancialReportScreen extends StatefulWidget {
-  const FinancialReportScreen({super.key});
+  final Function(int)? onNavigate;
+  const FinancialReportScreen({super.key, this.onNavigate});
 
   @override
   State<FinancialReportScreen> createState() => _FinancialReportScreenState();
@@ -78,10 +79,12 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
     }
 
     // Fallbacks if empty
-    if (positivePoints.isEmpty)
+    if (positivePoints.isEmpty) {
       positivePoints.add("Terus catat transaksi untuk analisis lebih baik.");
-    if (improvementPoints.isEmpty)
+    }
+    if (improvementPoints.isEmpty) {
       improvementPoints.add("Pertahankan kebiasaan baikmu!");
+    }
 
     setState(() {
       _isAnalyzing = false;
@@ -95,19 +98,22 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          backgroundColor: const Color(0xFF2F2F2F),
+          backgroundColor: Theme.of(context).cardColor,
           child: Container(
             padding: const EdgeInsets.all(24.0),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20.0),
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF2F2F2F), Color(0xFF1C1C1E)],
+                colors: isDark
+                    ? [const Color(0xFF2F2F2F), const Color(0xFF1C1C1E)]
+                    : [Colors.white, Colors.grey.shade50],
               ),
               border: Border.all(color: const Color(0xFF37C8C3), width: 1),
             ),
@@ -126,7 +132,8 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                         Text(
                           'Analisis AI',
                           style: GoogleFonts.poppins(
-                            color: Colors.white,
+                            color:
+                                Theme.of(context).textTheme.titleLarge?.color,
                             fontWeight: FontWeight.bold,
                             fontSize: 20,
                           ),
@@ -134,7 +141,8 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                       ],
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.grey),
+                      icon: Icon(Icons.close,
+                          color: Theme.of(context).iconTheme.color),
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
@@ -145,7 +153,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                 Text(
                   summary,
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                     fontSize: 14,
                   ),
                 ),
@@ -154,7 +162,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                   _buildAnalysisSection(
                     'Hal Positif',
                     Icons.check_circle,
-                    Colors.greenAccent,
+                    isDark ? Colors.greenAccent : Colors.green,
                     positives,
                   ),
                 const SizedBox(height: 16),
@@ -162,7 +170,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                   _buildAnalysisSection(
                     'Area Peningkatan',
                     Icons.lightbulb,
-                    Colors.yellowAccent,
+                    isDark ? Colors.yellowAccent : Colors.orange[800]!,
                     improvements,
                   ),
               ],
@@ -197,8 +205,13 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
               padding: const EdgeInsets.only(left: 28.0, bottom: 4),
               child: Text(
                 '• $item',
-                style:
-                    GoogleFonts.poppins(color: Colors.grey[300], fontSize: 13),
+                style: GoogleFonts.poppins(
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.color
+                        ?.withOpacity(0.8),
+                    fontSize: 13),
               ),
             )),
       ],
@@ -210,16 +223,24 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
     const primaryColor = Color(0xFF37C8C3);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
+        leading: IconButton(
+          icon:
+              Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
+          onPressed: () {
+            if (widget.onNavigate != null) {
+              widget.onNavigate!(2); // Navigate to Home
+            } else {
+              Navigator.of(context).pop();
+            }
+          },
+        ),
         title: Text(
           'Laporan Keuangan',
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         centerTitle: true,
       ),
@@ -409,9 +430,10 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[800]!),
+        border:
+            Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
       child: Row(
         children: [
@@ -425,6 +447,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
 
   Widget _periodButton(String text, int index) {
     final isSelected = _selectedPeriod == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() => _selectedPeriod = index),
@@ -449,7 +472,9 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
             text,
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.black : Colors.grey,
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? Colors.grey : Colors.grey[600]),
               fontSize: 14,
             ),
           ),
@@ -490,9 +515,10 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey[800]!),
+        border:
+            Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -511,7 +537,11 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
               Text(
                 title,
                 style: GoogleFonts.poppins(
-                  color: Colors.grey[400],
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withOpacity(0.7),
                   fontSize: 12,
                 ),
               ),
@@ -522,11 +552,10 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
             fit: BoxFit.scaleDown,
             child: Text(
               amount,
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
             ),
           ),
         ],
@@ -564,20 +593,20 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
-                  color: Colors.black,
+                  color: Colors.white,
                   strokeWidth: 2,
                 ),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.auto_awesome, color: Colors.black),
+                  const Icon(Icons.auto_awesome, color: Colors.white),
                   const SizedBox(width: 10),
                   Text(
                     'ANALISIS DENGAN AI',
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: Colors.white,
                       fontSize: 16,
                     ),
                   ),
@@ -595,9 +624,10 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey[800]!),
+        border:
+            Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
       height: 350,
       child: Column(
@@ -608,7 +638,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
               Text(
                 'Statistik',
                 style: GoogleFonts.poppins(
-                  color: Colors.white,
+                  color: Theme.of(context).textTheme.titleLarge?.color,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -617,13 +647,17 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.black,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black
+                      : Colors.grey[200],
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   title,
                   style: GoogleFonts.poppins(
-                    color: Colors.grey[400],
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[400]
+                        : Colors.grey[800],
                     fontSize: 12,
                   ),
                 ),
@@ -646,14 +680,14 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
         maxY: maxY,
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (group) => const Color(0xFF2F2F2F),
+            getTooltipColor: (group) => Theme.of(context).cardColor,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final currencyFormatter = NumberFormat.compactCurrency(
                   locale: 'id_ID', symbol: 'Rp', decimalDigits: 0);
               return BarTooltipItem(
                 currencyFormatter.format(rod.toY),
                 GoogleFonts.poppins(
-                  color: Colors.white,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                   fontWeight: FontWeight.bold,
                 ),
               );
@@ -675,7 +709,11 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                       child: Text(
                         titles[value.toInt()],
                         style: GoogleFonts.poppins(
-                          color: Colors.grey,
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.color
+                              ?.withOpacity(0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -688,7 +726,11 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                     child: Text(
                       'M${value.toInt() + 1}',
                       style: GoogleFonts.poppins(
-                        color: Colors.grey,
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.color
+                            ?.withOpacity(0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -715,7 +757,11 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                       child: Text(
                         titles[value.toInt()],
                         style: GoogleFonts.poppins(
-                          color: Colors.grey,
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.color
+                              ?.withOpacity(0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -744,7 +790,11 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                   return Text(
                     currencyFormatter.format(value),
                     style: GoogleFonts.poppins(
-                      color: Colors.grey[600],
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.6),
                       fontSize: 10,
                     ),
                   );
@@ -764,7 +814,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
           horizontalInterval: maxY / 5,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.grey[800],
+              color: Theme.of(context).dividerColor.withOpacity(0.1),
               strokeWidth: 1,
               dashArray: [5, 5],
             );

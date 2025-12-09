@@ -38,7 +38,7 @@ class _MainScreenState extends State<MainScreen> {
         onNavigate: _onItemTapped,
       ),
       // 3: Analisis AI
-      const FinancialReportScreen(),
+      FinancialReportScreen(onNavigate: _onItemTapped),
       // 4: Pengaturan
       SettingsScreen(onNavigate: _onItemTapped),
     ];
@@ -52,7 +52,7 @@ class _MainScreenState extends State<MainScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1C1C1C),
+      extendBody: true,
       body: IndexedStack(
         index: _selectedIndex,
         children: pages,

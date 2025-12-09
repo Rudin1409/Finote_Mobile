@@ -90,9 +90,9 @@ class _AddSavingFormState extends State<AddSavingForm> {
 
     return Container(
       padding: const EdgeInsets.all(25.0),
-      decoration: const BoxDecoration(
-        color: Color(0xFF2F2F2F),
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(40),
           topRight: Radius.circular(40),
         ),
@@ -109,7 +109,7 @@ class _AddSavingFormState extends State<AddSavingForm> {
                   'Tambah Tabungan Baru',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -117,8 +117,8 @@ class _AddSavingFormState extends State<AddSavingForm> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: IconButton(
-                    icon:
-                        const Icon(Icons.close, color: Colors.white, size: 28),
+                    icon: Icon(Icons.close,
+                        color: Theme.of(context).iconTheme.color, size: 28),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -127,12 +127,19 @@ class _AddSavingFormState extends State<AddSavingForm> {
             const SizedBox(height: 8),
             Text(
               'Buat tabungan baru untuk Anda capai.',
-              style: GoogleFonts.poppins(color: Colors.grey[400], fontSize: 14),
+              style: GoogleFonts.poppins(
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withOpacity(0.7),
+                  fontSize: 14),
             ),
             const SizedBox(height: 30),
-            _buildSavingTypeSelector(primaryColor),
+            _buildSavingTypeSelector(context, primaryColor),
             const SizedBox(height: 25),
             _buildTextField(
+              context: context,
               label: 'Nama Tabungan',
               hint: isTargetSelected ? 'Ex: Motor' : 'Ex: Dana Darurat',
               controller: _titleController,
@@ -142,13 +149,14 @@ class _AddSavingFormState extends State<AddSavingForm> {
               Column(
                 children: [
                   _buildTextField(
+                    context: context,
                     label: 'Jumlah Target (IDR)',
                     hint: 'Ex: 50000',
                     keyboardType: TextInputType.number,
                     controller: _targetAmountController,
                   ),
                   const SizedBox(height: 15),
-                  _buildDateField(),
+                  _buildDateField(context),
                 ],
               ),
             const SizedBox(height: 35),
@@ -184,25 +192,27 @@ class _AddSavingFormState extends State<AddSavingForm> {
     );
   }
 
-  Widget _buildSavingTypeSelector(Color primaryColor) {
+  Widget _buildSavingTypeSelector(BuildContext context, Color primaryColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Pilih Jenis Tabungan',
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                fontSize: 16)),
         const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
-              child: _buildTypeButton('TARGET', isTargetSelected, primaryColor,
-                  () {
+              child: _buildTypeButton(
+                  context, 'TARGET', isTargetSelected, primaryColor, () {
                 setState(() => isTargetSelected = true);
               }),
             ),
             const SizedBox(width: 15),
             Expanded(
-              child: _buildTypeButton('BIASA', !isTargetSelected, primaryColor,
-                  () {
+              child: _buildTypeButton(
+                  context, 'BIASA', !isTargetSelected, primaryColor, () {
                 setState(() => isTargetSelected = false);
               }),
             ),
@@ -212,8 +222,8 @@ class _AddSavingFormState extends State<AddSavingForm> {
     );
   }
 
-  Widget _buildTypeButton(
-      String text, bool isSelected, Color color, VoidCallback onPressed) {
+  Widget _buildTypeButton(BuildContext context, String text, bool isSelected,
+      Color color, VoidCallback onPressed) {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
@@ -226,7 +236,9 @@ class _AddSavingFormState extends State<AddSavingForm> {
       child: Text(
         text,
         style: GoogleFonts.poppins(
-          color: isSelected ? Colors.white : Colors.grey[400],
+          color: isSelected
+              ? Colors.white
+              : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -234,26 +246,36 @@ class _AddSavingFormState extends State<AddSavingForm> {
   }
 
   Widget _buildTextField({
+    required BuildContext context,
     required String label,
     required String hint,
     TextInputType keyboardType = TextInputType.text,
     required TextEditingController controller,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                fontSize: 16)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.5)),
             filled: true,
-            fillColor: const Color(0xFF1C1C1C),
+            fillColor: isDark ? const Color(0xFF1C1C1C) : Colors.grey[200],
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
               borderSide:
@@ -261,7 +283,8 @@ class _AddSavingFormState extends State<AddSavingForm> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
-              borderSide: const BorderSide(color: Colors.white, width: 2),
+              borderSide:
+                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
             ),
           ),
         ),
@@ -269,20 +292,42 @@ class _AddSavingFormState extends State<AddSavingForm> {
     );
   }
 
-  Widget _buildDateField() {
+  Widget _buildDateField(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Tanggal Target',
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 16)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                fontSize: 16)),
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () async {
             DateTime? pickedDate = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2101));
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2101),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: Theme.of(context).colorScheme.copyWith(
+                          primary: const Color(0xFF37C8C3),
+                          onPrimary: Colors.white,
+                          onSurface:
+                              Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF37C8C3),
+                      ),
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
             if (pickedDate != null) {
               setState(() {
                 _selectedDate = pickedDate;
@@ -293,7 +338,7 @@ class _AddSavingFormState extends State<AddSavingForm> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF1C1C1C),
+              color: isDark ? const Color(0xFF1C1C1C) : Colors.grey[200],
               borderRadius: BorderRadius.circular(15),
               border: Border.all(color: const Color(0xFF37C8C3), width: 1.5),
             ),
@@ -302,8 +347,13 @@ class _AddSavingFormState extends State<AddSavingForm> {
                   ? 'Pilih Tanggal'
                   : DateFormat('dd MMMM yyyy').format(_selectedDate!),
               style: GoogleFonts.poppins(
-                  color:
-                      _selectedDate == null ? Colors.grey[600] : Colors.white),
+                  color: _selectedDate == null
+                      ? Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.5)
+                      : Theme.of(context).textTheme.bodyLarge?.color),
             ),
           ),
         ),

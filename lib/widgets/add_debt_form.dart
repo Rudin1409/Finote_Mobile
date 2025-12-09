@@ -46,6 +46,23 @@ class _AddDebtFormState extends State<AddDebtForm> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: const Color(0xFF37C8C3),
+                  onPrimary: Colors.white,
+                  onSurface: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF37C8C3),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -118,7 +135,10 @@ class _AddDebtFormState extends State<AddDebtForm> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Hutang berhasil disimpan',
-                  style: FinoteTextStyles.bodyMedium),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white)),
               backgroundColor: Colors.green,
             ),
           );
@@ -129,7 +149,10 @@ class _AddDebtFormState extends State<AddDebtForm> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Gagal menyimpan hutang: $e',
-                  style: FinoteTextStyles.bodyMedium),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white)),
               backgroundColor: FinoteColors.error,
             ),
           );
@@ -155,9 +178,9 @@ class _AddDebtFormState extends State<AddDebtForm> {
       ),
       child: Container(
         padding: const EdgeInsets.all(20.0),
-        decoration: const BoxDecoration(
-          color: Color(0xFF2F2F2F),
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
@@ -177,23 +200,31 @@ class _AddDebtFormState extends State<AddDebtForm> {
                       style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).textTheme.titleLarge?.color,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: Icon(Icons.close,
+                          color: Theme.of(context).iconTheme.color),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
                 Text(
                   'Buat catatan hutang baru.',
-                  style: GoogleFonts.poppins(color: Colors.grey[400]),
+                  style: GoogleFonts.poppins(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.7)),
                 ),
                 const SizedBox(height: 20),
                 Text(
                   'Tipe Hutang',
-                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+                  style: GoogleFonts.poppins(
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                      fontSize: 16),
                 ),
                 const SizedBox(height: 10),
                 ToggleButtons(
@@ -204,8 +235,8 @@ class _AddDebtFormState extends State<AddDebtForm> {
                     });
                   },
                   borderRadius: BorderRadius.circular(8),
-                  selectedColor: Colors.black,
-                  color: Colors.white,
+                  selectedColor: Colors.white,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                   fillColor: const Color(0xFF37C8C3),
                   borderColor: const Color(0xFF37C8C3),
                   selectedBorderColor: const Color(0xFF37C8C3),
@@ -226,9 +257,9 @@ class _AddDebtFormState extends State<AddDebtForm> {
                 ),
                 const SizedBox(height: 20),
                 if (_isInstallment)
-                  _buildInstallmentForm()
+                  _buildInstallmentForm(context)
                 else
-                  _buildOneTimeForm(),
+                  _buildOneTimeForm(context),
                 const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _saveDebt,
@@ -264,49 +295,55 @@ class _AddDebtFormState extends State<AddDebtForm> {
     );
   }
 
-  Widget _buildOneTimeForm() {
+  Widget _buildOneTimeForm(BuildContext context) {
     return Column(
       children: [
         _buildTextField(
+          context,
           controller: _nameController,
           labelText: 'Nama Hutang',
           hintText: 'Ex: Pinjam Uang',
         ),
         const SizedBox(height: 20),
         _buildTextField(
+          context,
           controller: _lenderController,
           labelText: 'Pemberi Hutang',
           hintText: 'Ex: Budi',
         ),
         const SizedBox(height: 20),
         _buildTextField(
+          context,
           controller: _amountController,
           labelText: 'Total Hutang',
           hintText: 'Ex: 500000',
           keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 20),
-        _buildDateField('Tanggal Jatuh Tempo', _dueDateController),
+        _buildDateField(context, 'Tanggal Jatuh Tempo', _dueDateController),
       ],
     );
   }
 
-  Widget _buildInstallmentForm() {
+  Widget _buildInstallmentForm(BuildContext context) {
     return Column(
       children: [
         _buildTextField(
+          context,
           controller: _nameController,
           labelText: 'Nama Hutang',
           hintText: 'Ex: Cicilan Motor',
         ),
         const SizedBox(height: 20),
         _buildTextField(
+          context,
           controller: _lenderController,
           labelText: 'Pemberi Hutang',
           hintText: 'Ex: Budi',
         ),
         const SizedBox(height: 20),
         _buildTextField(
+          context,
           controller: _installmentAmountController,
           labelText: 'Cicilan per Bulan (IDR)',
           hintText: 'Ex: 50000',
@@ -314,18 +351,20 @@ class _AddDebtFormState extends State<AddDebtForm> {
         ),
         const SizedBox(height: 20),
         _buildTextField(
+          context,
           controller: _durationController,
           labelText: 'Durasi Cicilan (Bulan)',
           hintText: 'Ex: 12',
           keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 20),
-        _buildDateField('Tanggal Mulai Cicilan', _startDateController),
+        _buildDateField(context, 'Tanggal Mulai Cicilan', _startDateController),
         const SizedBox(height: 20),
-        _buildDateField(
-            'Tanggal Pembayaran per Bulan', _monthlyPaymentDateController),
+        _buildDateField(context, 'Tanggal Pembayaran per Bulan',
+            _monthlyPaymentDateController),
         const SizedBox(height: 20),
         _buildTextField(
+          context,
           controller: _paymentLinkController,
           labelText: 'Link Pembayaran (opsional)',
           hintText: 'link',
@@ -335,7 +374,8 @@ class _AddDebtFormState extends State<AddDebtForm> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildTextField(
+    BuildContext context, {
     required TextEditingController controller,
     required String labelText,
     required String hintText,
@@ -347,23 +387,31 @@ class _AddDebtFormState extends State<AddDebtForm> {
       children: [
         Text(
           labelText,
-          style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+              fontSize: 16),
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: GoogleFonts.poppins(color: Colors.grey),
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFF37C8C3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.white),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor),
             ),
           ),
           validator: (value) {
@@ -377,30 +425,39 @@ class _AddDebtFormState extends State<AddDebtForm> {
     );
   }
 
-  Widget _buildDateField(String labelText, TextEditingController controller) {
+  Widget _buildDateField(BuildContext context, String labelText,
+      TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           labelText,
-          style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+              fontSize: 16),
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           readOnly: true,
           onTap: () => _selectDate(context, controller),
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: 'Pilih Tanggal',
-            hintStyle: GoogleFonts.poppins(color: Colors.grey),
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.5)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFF37C8C3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.white),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor),
             ),
             suffixIcon:
                 const Icon(Icons.calendar_today, color: Color(0xFF37C8C3)),

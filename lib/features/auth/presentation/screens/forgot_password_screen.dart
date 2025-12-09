@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -10,12 +9,12 @@ class ForgotPasswordScreen extends StatelessWidget {
     const primaryColor = Color(0xFF37C8C3);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: Icon(Icons.close, color: Theme.of(context).iconTheme.color),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -28,7 +27,7 @@ class ForgotPasswordScreen extends StatelessWidget {
             Text(
               'Forgot Password?',
               style: GoogleFonts.poppins(
-                color: Colors.white,
+                color: Theme.of(context).textTheme.titleLarge?.color,
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
               ),
@@ -37,24 +36,43 @@ class ForgotPasswordScreen extends StatelessWidget {
             Text(
               'Masukkan email Anda dan kami akan mengirimkan tautan untuk mereset password Anda.',
               style: GoogleFonts.poppins(
-                color: Colors.grey,
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.7),
                 fontSize: 16,
               ),
             ),
             const SizedBox(height: 40),
             TextField(
-              style: const TextStyle(color: Colors.white),
+              style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+              cursorColor: primaryColor,
               decoration: InputDecoration(
                 labelText: 'Email address',
-                labelStyle: const TextStyle(color: Colors.grey),
+                labelStyle: GoogleFonts.poppins(
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.color
+                        ?.withOpacity(0.5)),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.grey),
+                  borderSide: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey
+                          : Colors.grey.shade400),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderSide: const BorderSide(color: primaryColor),
                   borderRadius: BorderRadius.circular(16),
                 ),
+                filled: true,
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.transparent
+                    : Colors.grey[50],
               ),
             ),
             const SizedBox(height: 40),
@@ -73,7 +91,7 @@ class ForgotPasswordScreen extends StatelessWidget {
               child: Text(
                 'RECOVER',
                 style: GoogleFonts.poppins(
-                  color: Colors.black,
+                  color: Colors.black, // Tetap hitam agar kontras dengan cyan
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -85,7 +103,12 @@ class ForgotPasswordScreen extends StatelessWidget {
               children: [
                 Text(
                   'Remember password? ',
-                  style: GoogleFonts.poppins(color: Colors.grey),
+                  style: GoogleFonts.poppins(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.7)),
                 ),
                 GestureDetector(
                   onTap: () {

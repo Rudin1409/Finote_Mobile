@@ -6,6 +6,8 @@ import 'package:myapp/core/services/firestore_service.dart';
 import 'package:myapp/features/savings/presentation/screens/add_funds_screen.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
+import 'package:flutter/services.dart';
+
 class SavingsDetailScreen extends StatelessWidget {
   final String savingId;
   final String title;
@@ -21,17 +23,16 @@ class SavingsDetailScreen extends StatelessWidget {
     const primaryColor = Color(0xFF37C8C3);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1C1C1C),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1C1C1C),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon:
+              Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(title,
-            style: GoogleFonts.poppins(
-                color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(title, style: Theme.of(context).textTheme.titleLarge),
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirestoreService().getSavingStream(savingId),
@@ -76,7 +77,7 @@ class SavingsDetailScreen extends StatelessWidget {
               _buildHeader(context, primaryColor, currentAmount, percentage,
                   currencyFormatter, formattedTargetDate),
               const SizedBox(height: 20),
-              _buildHistorySection(entries, currencyFormatter),
+              _buildHistorySection(context, entries, currencyFormatter),
             ],
           );
         },
@@ -111,18 +112,18 @@ class SavingsDetailScreen extends StatelessWidget {
                 FittedBox(
                   child: Text(
                     formatter.format(currentAmount),
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ),
               ],
             ),
             circularStrokeCap: CircularStrokeCap.round,
             progressColor: primaryColor,
-            backgroundColor: Colors.grey[800]!,
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[800]!
+                : Colors.grey[300]!,
           ),
           const SizedBox(height: 20),
           Text(
@@ -160,20 +161,21 @@ class SavingsDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHistorySection(List<dynamic> entries, NumberFormat formatter) {
+  Widget _buildHistorySection(
+      BuildContext context, List<dynamic> entries, NumberFormat formatter) {
     return Expanded(
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(25.0),
         decoration: BoxDecoration(
-            color: const Color(0xFF2F2F2F),
+            color: Theme.of(context).cardColor,
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(40),
               topRight: Radius.circular(40),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(76),
+                color: Colors.black.withOpacity(0.1),
                 spreadRadius: 5,
                 blurRadius: 15,
                 offset: const Offset(0, -5),
@@ -203,7 +205,7 @@ class SavingsDetailScreen extends StatelessWidget {
                           const Divider(color: Colors.transparent, height: 15),
                       itemBuilder: (context, index) {
                         final entry = entries[index] as Map<String, dynamic>;
-                        return _buildHistoryItem(entry, formatter);
+                        return _buildHistoryItem(context, entry, formatter);
                       },
                     ),
             ),
@@ -213,7 +215,8 @@ class SavingsDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHistoryItem(Map<String, dynamic> entry, NumberFormat formatter) {
+  Widget _buildHistoryItem(BuildContext context, Map<String, dynamic> entry,
+      NumberFormat formatter) {
     final amount = (entry['amount'] as num).toDouble();
     final date = (entry['date'] as Timestamp).toDate();
     final formattedDate = DateFormat('d MMM, yyyy').format(date);
@@ -234,22 +237,22 @@ class SavingsDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Dana Masuk',
-                style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500)),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(fontWeight: FontWeight.w500)),
             const SizedBox(height: 4),
             Text(formattedDate,
-                style:
-                    GoogleFonts.poppins(color: Colors.grey[500], fontSize: 12)),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Colors.grey)),
           ],
         ),
         const Spacer(),
         Text('+${formatter.format(amount)}',
-            style: GoogleFonts.poppins(
-                color: const Color(0xFF37C8C3),
-                fontSize: 16,
-                fontWeight: FontWeight.bold)),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: const Color(0xFF37C8C3), fontWeight: FontWeight.bold)),
       ],
     );
   }

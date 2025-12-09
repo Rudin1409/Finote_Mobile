@@ -35,9 +35,10 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // Navigate after animation
     Future.delayed(const Duration(seconds: 3), () {
-      _checkAuthAndNavigate();
+      if (mounted) {
+        _checkAuthAndNavigate();
+      }
     });
   }
 
@@ -63,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

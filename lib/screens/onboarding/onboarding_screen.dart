@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
 import 'package:myapp/core/theme/app_theme.dart';
 
+import 'package:flutter/services.dart';
+
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -48,84 +50,91 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: FinoteColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: demoData.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    _pageIndex = index;
-                  });
-                },
-                itemBuilder: (context, index) => OnboardContent(
-                  image: demoData[index]["image"],
-                  title: demoData[index]["title"],
-                  description: demoData[index]["description"],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: demoData.length,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _pageIndex = index;
+                    });
+                  },
+                  itemBuilder: (context, index) => OnboardContent(
+                    image: demoData[index]["image"],
+                    title: demoData[index]["title"],
+                    description: demoData[index]["description"],
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Dot Indicators
-                  Row(
-                    children: List.generate(
-                      demoData.length,
-                      (index) => Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          height: 8,
-                          width: _pageIndex == index ? 24 : 8,
-                          decoration: BoxDecoration(
-                            color: _pageIndex == index
-                                ? FinoteColors.primary
-                                : FinoteColors.surface,
-                            borderRadius: BorderRadius.circular(4),
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Dot Indicators
+                    Row(
+                      children: List.generate(
+                        demoData.length,
+                        (index) => Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            height: 8,
+                            width: _pageIndex == index ? 24 : 8,
+                            decoration: BoxDecoration(
+                              color: _pageIndex == index
+                                  ? FinoteColors.primary
+                                  : (isDark
+                                      ? FinoteColors.surface
+                                      : Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  // Next/Get Started Button
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_pageIndex == demoData.length - 1) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const LoginScreen()),
-                        );
-                      } else {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.ease,
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(20),
-                      backgroundColor: FinoteColors.primary,
+                    // Next/Get Started Button
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_pageIndex == demoData.length - 1) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const LoginScreen()),
+                          );
+                        } else {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.ease,
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape: const CircleBorder(),
+                        padding: const EdgeInsets.all(20),
+                        backgroundColor: FinoteColors.primary,
+                      ),
+                      child: Icon(
+                        _pageIndex == demoData.length - 1
+                            ? Icons.check
+                            : Icons.arrow_forward,
+                        color:
+                            Colors.black, // Arrow always black on cyan button
+                      ),
                     ),
-                    child: Icon(
-                      _pageIndex == demoData.length - 1
-                          ? Icons.check
-                          : Icons.arrow_forward,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -160,14 +169,22 @@ class OnboardContent extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: FinoteTextStyles.displayLarge.copyWith(fontSize: 28),
+            style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 16),
           Text(
             description,
             textAlign: TextAlign.center,
-            style: FinoteTextStyles.bodyLarge
-                .copyWith(color: FinoteColors.textSecondary),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withOpacity(0.7),
+                ),
           ),
           const Spacer(),
         ],

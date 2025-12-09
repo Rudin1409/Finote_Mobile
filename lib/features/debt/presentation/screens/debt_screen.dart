@@ -9,6 +9,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
 
+import 'package:flutter/services.dart';
+
 class DebtScreen extends StatelessWidget {
   final Function(int)? onNavigate;
   const DebtScreen({super.key, this.onNavigate});
@@ -16,12 +18,16 @@ class DebtScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1C1C1C),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: FinoteColors.background,
-        title: Text('Hutang', style: FinoteTextStyles.titleLarge),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        title: Text(
+          'Hutang',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon:
+              Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
           onPressed: () {
             if (onNavigate != null) {
               onNavigate!(2); // Pindah ke tab Home
@@ -32,7 +38,7 @@ class DebtScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.white),
+            icon: Icon(Icons.add, color: Theme.of(context).iconTheme.color),
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -107,85 +113,121 @@ class DebtScreen extends StatelessWidget {
           final currencyFormatter = NumberFormat.currency(
               locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              // Simulate refresh or reload data if needed
-              await Future.delayed(const Duration(seconds: 1));
-            },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 20.0, horizontal: 20.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const FaIcon(
                       FontAwesomeIcons.moneyBillWave,
                       color: Color(0xFF37C8C3),
                       size: 60,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
                     Text(
                       currencyFormatter.format(totalDebt),
                       style: FinoteTextStyles.displayLarge,
                     ),
-                    const SizedBox(height: 32),
-                    Text(
-                      'JENIS JENIS HUTANG',
-                      style: FinoteTextStyles.titleMedium
-                          .copyWith(color: FinoteColors.textSecondary),
-                    ),
-                    const SizedBox(height: 16),
-                    if (debts.isEmpty)
-                      Center(
-                          child: Padding(
-                        padding: const EdgeInsets.only(top: 32.0),
-                        child: Text('Belum ada hutang',
-                            style: FinoteTextStyles.bodyMedium),
-                      ))
-                    else
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: debts.length,
-                        itemBuilder: (context, index) {
-                          final data =
-                              debts[index].data() as Map<String, dynamic>;
-                          final amount = (data['amount'] as num).toDouble();
-                          final paid = (data['paidAmount'] as num).toDouble();
-                          final progress = amount > 0 ? paid / amount : 0.0;
-                          final debtId = debts[index].id;
-                          final title = data['name'] ?? 'Hutang';
-
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => DebtDetailScreen(
-                                          debtId: debtId,
-                                          title: title,
-                                        )),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 16.0),
-                              child: _buildAnimatedDebtItem(
-                                index: index,
-                                icon:
-                                    FontAwesomeIcons.creditCard, // Default icon
-                                title: title,
-                                totalAmount: amount,
-                                progress: progress,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
                   ],
                 ),
               ),
-            ),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(40),
+                      topRight: Radius.circular(40),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(25, 25, 25, 20),
+                        child: Text(
+                          'JENIS JENIS HUTANG',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.color
+                                        ?.withOpacity(0.7),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                      ),
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: () async {
+                            await Future.delayed(const Duration(seconds: 1));
+                          },
+                          child: debts.isEmpty
+                              ? SingleChildScrollView(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  child: Container(
+                                    height: 400,
+                                    alignment: Alignment.center,
+                                    child: Text('Belum ada hutang',
+                                        style: FinoteTextStyles.bodyMedium),
+                                  ),
+                                )
+                              : ListView.builder(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 25.0),
+                                  itemCount: debts.length,
+                                  itemBuilder: (context, index) {
+                                    final data = debts[index].data()
+                                        as Map<String, dynamic>;
+                                    final amount =
+                                        (data['amount'] as num).toDouble();
+                                    final paid =
+                                        (data['paidAmount'] as num).toDouble();
+                                    final progress =
+                                        amount > 0 ? paid / amount : 0.0;
+                                    final debtId = debts[index].id;
+                                    final title = data['name'] ?? 'Hutang';
+
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  DebtDetailScreen(
+                                                    debtId: debtId,
+                                                    title: title,
+                                                  )),
+                                        );
+                                      },
+                                      child: Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 16.0),
+                                        child: _buildAnimatedDebtItem(
+                                          context: context,
+                                          index: index,
+                                          icon: FontAwesomeIcons.creditCard,
+                                          title: title,
+                                          totalAmount: amount,
+                                          progress: progress,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -193,6 +235,7 @@ class DebtScreen extends StatelessWidget {
   }
 
   Widget _buildAnimatedDebtItem({
+    required BuildContext context,
     required int index,
     required IconData icon,
     required String title,
@@ -217,10 +260,10 @@ class DebtScreen extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
         decoration: BoxDecoration(
-          color: FinoteColors.surface,
-          borderRadius: BorderRadius.circular(16),
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -231,27 +274,37 @@ class DebtScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            FaIcon(
-              icon,
-              color: FinoteColors.primary,
-              size: 30,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: FinoteColors.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: FaIcon(
+                icon,
+                color: FinoteColors.primary,
+                size: 28,
+              ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: FinoteTextStyles.titleMedium,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     child: LinearProgressIndicator(
                       value: progress,
-                      minHeight: 8,
-                      backgroundColor: Colors.grey[800],
+                      minHeight: 10,
+                      backgroundColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[800]
+                              : Colors.grey[300],
                       valueColor: const AlwaysStoppedAnimation<Color>(
                         FinoteColors.primary,
                       ),
@@ -260,7 +313,7 @@ class DebtScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'Total: $formattedTotalAmount',
-                    style: FinoteTextStyles.bodyMedium,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
               ),

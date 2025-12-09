@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:myapp/core/services/theme_service.dart';
+import 'package:myapp/core/theme/app_theme.dart';
 import 'package:myapp/features/settings/presentation/screens/change_password_screen.dart';
 import 'package:myapp/features/settings/presentation/widgets/delete_account_dialog.dart';
 import 'package:myapp/features/settings/presentation/screens/edit_profile_screen.dart';
@@ -17,16 +20,13 @@ class SettingsScreen extends StatelessWidget {
     final name = user?.displayName ?? 'User';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212), // Darker background
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         title: Text(
-          'Settings', // Changed title
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          'Settings',
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         centerTitle: true,
       ),
@@ -49,13 +49,12 @@ class SettingsScreen extends StatelessWidget {
                   backgroundImage: AssetImage('assets/images/avatar.png'),
                 ),
                 const SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   name,
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -66,10 +65,9 @@ class SettingsScreen extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       email,
-                      style: GoogleFonts.poppins(
-                        color: Colors.grey[400],
-                        fontSize: 14,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey,
+                          ),
                     ),
                   ],
                 ),
@@ -116,8 +114,15 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildSettingsOptions(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1C),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -126,6 +131,13 @@ class SettingsScreen extends StatelessWidget {
             icon: Icons.edit_outlined,
             text: 'Edit Profile',
             onTap: () => _showEditProfileSheet(context),
+          ),
+          _buildDivider(),
+          _buildListTile(
+            context,
+            icon: Icons.brightness_6_outlined,
+            text: 'Tampilan Aplikasi',
+            onTap: () => _showThemeDialog(context),
           ),
           _buildDivider(),
           _buildListTile(
@@ -146,6 +158,46 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  void _showThemeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final themeService = Provider.of<ThemeService>(context, listen: false);
+        return AlertDialog(
+          backgroundColor: Theme.of(context).cardColor,
+          title:
+              Text('Pilih Tema', style: Theme.of(context).textTheme.titleLarge),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildThemeRadio(
+                  context, themeService, 'Terang', ThemeMode.light),
+              _buildThemeRadio(context, themeService, 'Gelap', ThemeMode.dark),
+              _buildThemeRadio(
+                  context, themeService, 'Sistem', ThemeMode.system),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildThemeRadio(BuildContext context, ThemeService service,
+      String label, ThemeMode mode) {
+    return RadioListTile<ThemeMode>(
+      title: Text(label, style: Theme.of(context).textTheme.bodyLarge),
+      value: mode,
+      groupValue: service.themeMode,
+      onChanged: (ThemeMode? value) {
+        if (value != null) {
+          service.setThemeMode(value);
+          Navigator.pop(context);
+        }
+      },
+      activeColor: FinoteColors.primary,
+    );
+  }
+
   Widget _buildLogoutButton(BuildContext context) {
     return GestureDetector(
       onTap: () async {
@@ -160,8 +212,15 @@ class SettingsScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1C1C),
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -190,18 +249,18 @@ class SettingsScreen extends StatelessWidget {
       leading: Icon(icon, color: const Color(0xFF37C8C3)),
       title: Text(
         text,
-        style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+        style: Theme.of(context).textTheme.bodyLarge,
       ),
-      trailing:
-          const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+      trailing: Icon(Icons.arrow_forward_ios,
+          color: Theme.of(context).iconTheme.color, size: 16),
       onTap: onTap,
     );
   }
 
   Widget _buildDivider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0),
-      child: Divider(color: Color(0xFF2F2F2F), height: 1),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Divider(color: Colors.grey.withOpacity(0.2), height: 1),
     );
   }
 }

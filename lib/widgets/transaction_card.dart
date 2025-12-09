@@ -43,7 +43,7 @@ class TransactionCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: FinoteColors.surface,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -66,13 +66,13 @@ class TransactionCard extends StatelessWidget {
           ),
           title: Text(
             title,
-            style: FinoteTextStyles.titleMedium,
+            style: Theme.of(context).textTheme.titleMedium,
           ),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               subtitle,
-              style: FinoteTextStyles.bodyMedium,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
           trailing: Row(

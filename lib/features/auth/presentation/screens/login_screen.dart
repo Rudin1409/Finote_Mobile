@@ -87,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -105,20 +105,18 @@ class _LoginScreenState extends State<LoginScreen> {
             Text(
               'Welcome Back!',
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 28,
+                  ),
             ),
             const SizedBox(height: 10),
             Text(
               'Login to your account to continue.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                color: Colors.grey[400],
-                fontSize: 16,
-              ),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.grey[400],
+                  ),
             ),
             const SizedBox(height: 50),
             _buildTextField(
@@ -201,29 +199,30 @@ class _LoginScreenState extends State<LoginScreen> {
       {required TextEditingController controller,
       required String labelText,
       required String hintText}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           labelText,
-          style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: Theme.of(context).textTheme.bodyMedium,
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: GoogleFonts.poppins(color: Colors.grey),
             filled: true,
-            fillColor: const Color(0xFF1C1C1C),
+            fillColor: isDark ? Theme.of(context).cardColor : Colors.grey[200],
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFF37C8C3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.white),
+              borderSide: const BorderSide(color: Color(0xFF37C8C3), width: 2),
             ),
           ),
         ),
@@ -232,30 +231,32 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildPasswordField() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Password',
-          style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: _passwordController,
           obscureText: _isObscure,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: Theme.of(context).textTheme.bodyMedium,
           decoration: InputDecoration(
             hintText: 'Enter your password',
             hintStyle: GoogleFonts.poppins(color: Colors.grey),
             filled: true,
-            fillColor: const Color(0xFF1C1C1C),
+            fillColor: isDark ? Theme.of(context).cardColor : Colors.grey[200],
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFF37C8C3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.white),
+              borderSide:
+                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
             ),
             suffixIcon: IconButton(
               icon: Icon(

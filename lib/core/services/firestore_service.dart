@@ -5,6 +5,7 @@ class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   String? get _userId => FirebaseAuth.instance.currentUser?.uid;
+  String? get userId => _userId;
 
   // Get user specific collection stream
   Stream<QuerySnapshot> getTransactionsStream() {
@@ -264,6 +265,56 @@ class FirestoreService {
         .doc(_userId)
         .collection('transactions')
         .doc(transactionId)
+        .delete();
+  }
+
+  // --- Notifications ---
+
+  Stream<QuerySnapshot> getNotificationsStream() {
+    if (_userId == null) return const Stream.empty();
+    return _db
+        .collection('users')
+        .doc(_userId)
+        .collection('notifications')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  Future<void> addNotification({
+    required String userId,
+    required String title,
+    required String body,
+    required String type, // 'debt', 'saving', 'info'
+  }) async {
+    // Simple deduplication check for daily reports/info to avoid spam
+    // (Optional: Implement robust checking if needed)
+
+    await _db.collection('users').doc(userId).collection('notifications').add({
+      'title': title,
+      'body': body,
+      'type': type,
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> markNotificationAsRead(String notificationId) async {
+    if (_userId == null) return;
+    await _db
+        .collection('users')
+        .doc(_userId)
+        .collection('notifications')
+        .doc(notificationId)
+        .update({'isRead': true});
+  }
+
+  Future<void> deleteNotification(String notificationId) async {
+    if (_userId == null) return;
+    await _db
+        .collection('users')
+        .doc(_userId)
+        .collection('notifications')
+        .doc(notificationId)
         .delete();
   }
 }

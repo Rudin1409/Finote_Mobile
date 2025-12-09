@@ -9,6 +9,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
 
+import 'package:flutter/services.dart';
+
 class SavingsScreen extends StatelessWidget {
   final Function(int) onNavigate;
 
@@ -37,18 +39,20 @@ class SavingsScreen extends StatelessWidget {
     const primaryColor = Color(0xFF37C8C3);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1C1C1C),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: FinoteColors.background,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        title: Text('Tabungan', style: FinoteTextStyles.titleLarge),
+        title: Text('Tabungan', style: Theme.of(context).textTheme.titleLarge),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon:
+              Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
           onPressed: () => onNavigate(2), // Navigate back to Home
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.white, size: 30),
+            icon: Icon(Icons.add,
+                color: Theme.of(context).iconTheme.color, size: 30),
             onPressed: () => _showAddSavingForm(context), // Show the modal
           ),
         ],
@@ -153,9 +157,9 @@ class SavingsScreen extends StatelessWidget {
   Widget _buildSavingsListContainer(BuildContext context, Color primaryColor,
       List<QueryDocumentSnapshot> savings) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF2F2F2F),
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(40),
           topRight: Radius.circular(40),
         ),
@@ -167,8 +171,14 @@ class SavingsScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(25, 25, 25, 20),
             child: Text(
               'JENIS JENIS TABUNGAN',
-              style: FinoteTextStyles.titleMedium
-                  .copyWith(color: FinoteColors.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.color
+                        ?.withOpacity(0.7),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
           ),
           Expanded(
@@ -253,7 +263,7 @@ class SavingsScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
           decoration: BoxDecoration(
-            color: FinoteColors.surface,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
@@ -280,7 +290,7 @@ class SavingsScreen extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: FinoteTextStyles.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 10),
                     ClipRRect(
@@ -295,7 +305,7 @@ class SavingsScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       amountLeft,
-                      style: FinoteTextStyles.bodyMedium,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
                 ),

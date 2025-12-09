@@ -106,9 +106,9 @@ class PayDebtFormState extends State<PayDebtForm> {
           right: 16,
           top: 16,
         ),
-        decoration: const BoxDecoration(
-          color: Color(0xFF2C2C2C),
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
@@ -120,7 +120,8 @@ class PayDebtFormState extends State<PayDebtForm> {
             Align(
               alignment: Alignment.topRight,
               child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
+                icon:
+                    Icon(Icons.close, color: Theme.of(context).iconTheme.color),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
@@ -128,7 +129,7 @@ class PayDebtFormState extends State<PayDebtForm> {
               'Bayar Hutang:',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
-                color: Colors.white,
+                color: Theme.of(context).textTheme.titleLarge?.color,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -136,10 +137,16 @@ class PayDebtFormState extends State<PayDebtForm> {
             Text(
               'Catat pembayaran untuk melunasi hutang Anda.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(color: Colors.grey[400]),
+              style: GoogleFonts.poppins(
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withOpacity(0.7)),
             ),
             const SizedBox(height: 24),
             _buildTextField(
+              context: context,
               label: 'Jumlah Pembayaran (IDR)',
               hint: 'Ex : 50000',
               controller: _amountController,
@@ -147,6 +154,7 @@ class PayDebtFormState extends State<PayDebtForm> {
             ),
             const SizedBox(height: 16),
             _buildDropdownField(
+              context: context,
               label: 'Sumber Dana',
               hint: 'Pilih Sumber Dana',
               value: _selectedSource,
@@ -155,9 +163,12 @@ class PayDebtFormState extends State<PayDebtForm> {
                         value: s.value,
                         child: Row(
                           children: [
-                            Icon(s.icon, size: 18, color: Colors.white70),
+                            Icon(s.icon,
+                                size: 18,
+                                color: Theme.of(context).iconTheme.color),
                             const SizedBox(width: 8),
-                            Text(s.label),
+                            Text(s.label,
+                                style: Theme.of(context).textTheme.bodyMedium),
                           ],
                         ),
                       ))
@@ -176,9 +187,13 @@ class PayDebtFormState extends State<PayDebtForm> {
               controller: _dateController,
             ),
             const SizedBox(height: 32),
-            _buildButton(text: 'LINK PEMBAYARAN', onPressed: _launchURL),
+            _buildButton(
+                context: context,
+                text: 'LINK PEMBAYARAN',
+                onPressed: _launchURL),
             const SizedBox(height: 16),
             _buildButton(
+              context: context,
               text: _isLoading ? 'MENYIMPAN...' : 'CATAT PEMBAYARAN',
               isPrimary: false,
               onPressed: _isLoading ? () {} : _payDebt,
@@ -191,26 +206,36 @@ class PayDebtFormState extends State<PayDebtForm> {
   }
 
   Widget _buildTextField({
+    required BuildContext context,
     required String label,
     required String hint,
     required TextEditingController controller,
     bool isNumber = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.5)),
             filled: true,
-            fillColor: const Color(0xFF1C1C1C),
+            fillColor: isDark ? const Color(0xFF1C1C1C) : Colors.grey[200],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFF37C8C3)),
@@ -221,7 +246,8 @@ class PayDebtFormState extends State<PayDebtForm> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.white, width: 2),
+              borderSide:
+                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
             ),
           ),
         ),
@@ -230,36 +256,46 @@ class PayDebtFormState extends State<PayDebtForm> {
   }
 
   Widget _buildDropdownField({
+    required BuildContext context,
     required String label,
     required String hint,
     required List<DropdownMenuItem<String>> items,
     String? value,
     required void Function(String?) onChanged,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14)),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           decoration: BoxDecoration(
-            color: const Color(0xFF1C1C1C),
+            color: isDark ? const Color(0xFF1C1C1C) : Colors.grey[200],
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: const Color(0xFF37C8C3)),
           ),
           child: DropdownButtonFormField<String>(
-            value: value,
-            hint:
-                Text(hint, style: GoogleFonts.poppins(color: Colors.grey[600])),
+            initialValue: value,
+            hint: Text(hint,
+                style: GoogleFonts.poppins(
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.color
+                        ?.withOpacity(0.5))),
             items: items,
             onChanged: onChanged,
             decoration: const InputDecoration(
               border: InputBorder.none,
             ),
-            dropdownColor: const Color(0xFF2C2C2C),
-            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+            dropdownColor: Theme.of(context).cardColor,
+            icon: Icon(Icons.arrow_drop_down,
+                color: Theme.of(context).iconTheme.color),
           ),
         ),
       ],
@@ -272,11 +308,14 @@ class PayDebtFormState extends State<PayDebtForm> {
     required String hint,
     required TextEditingController controller,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
@@ -287,18 +326,42 @@ class PayDebtFormState extends State<PayDebtForm> {
               initialDate: DateTime.now(),
               firstDate: DateTime(2000),
               lastDate: DateTime(2101),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: Theme.of(context).colorScheme.copyWith(
+                          primary: const Color(0xFF37C8C3),
+                          onPrimary: Colors.white,
+                          onSurface:
+                              Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF37C8C3),
+                      ),
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
             );
             if (pickedDate != null) {
               String formattedDate = DateFormat('d/M/yyyy').format(pickedDate);
               controller.text = formattedDate;
             }
           },
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.5)),
             filled: true,
-            fillColor: const Color(0xFF1C1C1C),
+            fillColor: isDark ? const Color(0xFF1C1C1C) : Colors.grey[200],
             suffixIcon:
                 const Icon(Icons.calendar_today, color: Color(0xFF37C8C3)),
             border: OutlineInputBorder(
@@ -316,7 +379,8 @@ class PayDebtFormState extends State<PayDebtForm> {
   }
 
   Widget _buildButton(
-      {required String text,
+      {required BuildContext context,
+      required String text,
       required VoidCallback onPressed,
       bool isPrimary = true}) {
     return ElevatedButton(
@@ -335,7 +399,9 @@ class PayDebtFormState extends State<PayDebtForm> {
       child: Text(
         text,
         style: GoogleFonts.poppins(
-          color: Colors.white,
+          color: isPrimary
+              ? Colors.white
+              : Theme.of(context).textTheme.bodyLarge?.color,
           fontWeight: FontWeight.bold,
           fontSize: 16,
         ),

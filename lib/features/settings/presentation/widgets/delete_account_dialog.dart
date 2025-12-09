@@ -43,7 +43,7 @@ class DeleteAccountDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: const Color(0xFF2F2F2F),
+      backgroundColor: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
@@ -60,20 +60,17 @@ class DeleteAccountDialog extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'Hapus Akun',
-              style: GoogleFonts.poppins(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 8),
             Text(
               'Apakah Anda yakin ingin menghapus akun Anda secara permanen? Tindakan ini tidak dapat diurungkan.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                color: Colors.grey[400],
-                fontSize: 14,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey,
+                  ),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -100,7 +97,7 @@ class DeleteAccountDialog extends StatelessWidget {
               child: Text(
                 'Batal',
                 style: GoogleFonts.poppins(
-                  color: Colors.grey[400],
+                  color: Colors.grey,
                   fontWeight: FontWeight.w600,
                 ),
               ),

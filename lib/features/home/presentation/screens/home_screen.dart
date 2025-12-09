@@ -12,6 +12,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/core/constants/app_constants.dart';
 import 'package:myapp/features/income/presentation/screens/income_screen.dart';
+import 'package:myapp/core/services/notification_service.dart';
+import 'package:myapp/features/notification/presentation/screens/notification_screen.dart';
+
 import 'package:myapp/features/expense/presentation/screens/expense_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -39,6 +42,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadData() async {
     // Simulate network request
     await Future.delayed(const Duration(seconds: 3));
+
+    // Initialize Notification Service
+    await NotificationService().init();
+    final userId = FirestoreService().userId;
+    if (userId != null) {
+      await NotificationService().checkAll(userId);
+    }
+
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -56,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const Rect.fromLTWH(500.0, 80.0, 0.0, 0.0),
           Rect.fromLTWH(0, 0, overlay.size.width, overlay.size.height)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
-      color: const Color(0xFF2F2F2F),
+      color: Theme.of(context).cardColor,
       items: [
         PopupMenuItem(
           enabled: false,
@@ -68,19 +79,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text("Rudin",
                       style: GoogleFonts.poppins(
-                          color: Colors.white,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                           fontWeight: FontWeight.bold,
                           fontSize: 16)),
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child:
-                        const Icon(Icons.close, color: Colors.white, size: 20),
+                    child: Icon(Icons.close,
+                        color: Theme.of(context).iconTheme.color, size: 20),
                   ),
                 ],
               ),
               Text("muhammadbahrudin1409@gmail.com",
                   style: GoogleFonts.poppins(
-                      color: Colors.grey[400], fontSize: 12)),
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                      fontSize: 12)),
               const Divider(color: Colors.grey, thickness: 0.5, height: 20),
             ],
           ),
@@ -104,11 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       child: Row(
         children: [
-          Icon(icon, color: FinoteColors.textPrimary, size: 20),
+          Icon(icon, color: Theme.of(context).iconTheme.color, size: 20),
           const SizedBox(width: 12),
           Text(text,
-              style: FinoteTextStyles.bodyMedium
-                  .copyWith(color: FinoteColors.textPrimary)),
+              style: FinoteTextStyles.bodyMedium.copyWith(
+                  color: Theme.of(context).textTheme.bodyMedium?.color)),
         ],
       ),
     );
@@ -117,9 +129,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: FinoteColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: FinoteColors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         leading: const Padding(
           padding: EdgeInsets.all(8.0),
@@ -130,36 +142,60 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Halo, Rudin!', style: FinoteTextStyles.titleLarge),
+            Text('Halo, Rudin!', style: Theme.of(context).textTheme.titleLarge),
             Text('Selamat Datang Kembali',
-                style: FinoteTextStyles.bodyMedium.copyWith(fontSize: 12)),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(fontSize: 12)),
           ],
         ),
         actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_none,
-                    color: FinoteColors.textPrimary, size: 30),
-                onPressed: () {},
-              ),
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: FinoteColors.primary,
-                    shape: BoxShape.circle,
+          StreamBuilder<QuerySnapshot>(
+            stream: FirestoreService().getNotificationsStream(),
+            builder: (context, snapshot) {
+              bool hasUnread = false;
+              if (snapshot.hasData) {
+                final docs = snapshot.data!.docs;
+                hasUnread = docs.any((doc) =>
+                    (doc.data() as Map<String, dynamic>)['isRead'] == false);
+              }
+
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.notifications_none,
+                        color: Theme.of(context).iconTheme.color, size: 28),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationScreen(),
+                        ),
+                      );
+                    },
                   ),
-                ),
-              )
-            ],
+                  if (hasUnread)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    )
+                ],
+              );
+            },
           ),
           IconButton(
-            icon: const Icon(Icons.menu,
-                color: FinoteColors.textPrimary, size: 30),
+            icon: Icon(Icons.menu,
+                color: Theme.of(context).iconTheme.color, size: 30),
             onPressed: () => _showProfileMenu(context),
           ),
         ],
@@ -170,59 +206,62 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFloatingActionButton() {
-    const primaryColor = Color(0xFF37C8C3);
-    return SpeedDial(
-      icon: Icons.add,
-      activeIcon: Icons.close,
-      backgroundColor: primaryColor,
-      foregroundColor: Colors.white,
-      activeBackgroundColor: Colors.redAccent,
-      activeForegroundColor: Colors.white,
-      buttonSize: const Size(60, 60),
-      childrenButtonSize: const Size(60, 60),
-      curve: Curves.bounceIn,
-      overlayColor: Colors.black,
-      overlayOpacity: 0.5,
-      spacing: 12,
-      spaceBetweenChildren: 8,
-      children: [
-        SpeedDialChild(
-          child: const Icon(Icons.arrow_downward, color: Colors.white),
-          backgroundColor: Colors.green,
-          label: 'Pemasukan',
-          labelStyle: GoogleFonts.poppins(
-              color: Colors.white, fontWeight: FontWeight.bold),
-          labelBackgroundColor: Colors.green.withAlpha(204),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => IncomeScreen(
-                  onNavigate: (index) => Navigator.pop(context),
+    final primaryColor = Theme.of(context).primaryColor;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 70.0),
+      child: SpeedDial(
+        icon: Icons.add,
+        activeIcon: Icons.close,
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        activeBackgroundColor: Colors.redAccent,
+        activeForegroundColor: Colors.white,
+        buttonSize: const Size(60, 60),
+        childrenButtonSize: const Size(60, 60),
+        curve: Curves.bounceIn,
+        overlayColor: Colors.black,
+        overlayOpacity: 0.5,
+        spacing: 12,
+        spaceBetweenChildren: 8,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.arrow_downward, color: Colors.white),
+            backgroundColor: Colors.green,
+            label: 'Pemasukan',
+            labelStyle: GoogleFonts.poppins(
+                color: Colors.white, fontWeight: FontWeight.bold),
+            labelBackgroundColor: Colors.green.withAlpha(204),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => IncomeScreen(
+                    onNavigate: (index) => Navigator.pop(context),
+                  ),
                 ),
-              ),
-            );
-          },
-        ),
-        SpeedDialChild(
-          child: const Icon(Icons.arrow_upward, color: Colors.white),
-          backgroundColor: Colors.red,
-          label: 'Pengeluaran',
-          labelStyle: GoogleFonts.poppins(
-              color: Colors.white, fontWeight: FontWeight.bold),
-          labelBackgroundColor: Colors.red.withAlpha(204),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ExpenseScreen(
-                  onNavigate: (index) => Navigator.pop(context),
+              );
+            },
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.arrow_upward, color: Colors.white),
+            backgroundColor: Colors.red,
+            label: 'Pengeluaran',
+            labelStyle: GoogleFonts.poppins(
+                color: Colors.white, fontWeight: FontWeight.bold),
+            labelBackgroundColor: Colors.red.withAlpha(204),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ExpenseScreen(
+                    onNavigate: (index) => Navigator.pop(context),
+                  ),
                 ),
-              ),
-            );
-          },
-        ),
-      ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -237,16 +276,14 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   'Terjadi kesalahan',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                        fontSize: 18,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Gagal memuat data. Silakan login ulang.',
-                  style: GoogleFonts.poppins(color: Colors.grey),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
@@ -258,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF37C8C3),
+                    backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -329,9 +366,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildShimmerLoading() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? Colors.grey[850]! : Colors.grey[300]!;
+    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
+    final containerColor = isDark ? Colors.grey[900] : Colors.white;
+
     return Shimmer.fromColors(
-      baseColor: Colors.grey[850]!,
-      highlightColor: Colors.grey[700]!,
+      baseColor: baseColor,
+      highlightColor: highlightColor,
       child: SingleChildScrollView(
         physics: const NeverScrollableScrollPhysics(),
         child: Padding(
@@ -342,7 +384,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.grey[900],
+                  color: containerColor,
                   borderRadius: BorderRadius.circular(32),
                 ),
                 child: Column(
@@ -371,7 +413,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 300,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[900],
+                  color: containerColor,
                   borderRadius: BorderRadius.circular(32),
                 ),
                 child: Column(
@@ -404,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 150,
                     margin: const EdgeInsets.only(right: 16),
                     decoration: BoxDecoration(
-                      color: Colors.grey[900],
+                      color: containerColor,
                       borderRadius: BorderRadius.circular(32),
                     ),
                   ),
@@ -429,13 +471,13 @@ class _HomeScreenState extends State<HomeScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            FinoteColors.surface,
-            FinoteColors.surface.withOpacity(0.8),
+            Theme.of(context).colorScheme.surface,
+            Theme.of(context).colorScheme.surface.withOpacity(0.8),
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -451,8 +493,10 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Saldo Akhir',
-                    style: FinoteTextStyles.titleMedium
-                        .copyWith(color: FinoteColors.textSecondary)),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 Text(currencyFormatter.format(balance),
                     style: FinoteTextStyles.displayLarge),
@@ -609,16 +653,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(32),
       ),
       child: Column(
         children: [
           Text("Komposisi Pengeluaran",
-              style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontSize: 18)),
           const SizedBox(height: 20),
           SizedBox(
             height: 200,
@@ -775,7 +819,7 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.only(right: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: FinoteColors.surface,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
@@ -805,14 +849,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 8),
           Text(amount,
-              style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold)),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontSize: 16, fontWeight: FontWeight.bold)),
           Text(title,
-              style: GoogleFonts.poppins(color: Colors.grey, fontSize: 12)),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(fontSize: 12)),
         ],
       ),
     );

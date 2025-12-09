@@ -63,9 +63,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
       child: Container(
         padding: const EdgeInsets.all(20.0),
-        decoration: const BoxDecoration(
-          color: Color(0xFF2F2F2F),
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
@@ -80,21 +80,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   const SizedBox(width: 40), // For spacing
                   Text(
                     'Profil',
-                    style: GoogleFonts.poppins(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close,
+                        color: Theme.of(context).iconTheme.color),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
               Text(
                 'Perbarui informasi profil Anda.',
-                style: GoogleFonts.poppins(color: Colors.grey[400]),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey,
+                    ),
               ),
               const SizedBox(height: 24),
               const CircleAvatar(
@@ -103,11 +104,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 24),
               _buildTextField(
+                context,
                 controller: _nameController,
                 labelText: 'Nama',
               ),
               const SizedBox(height: 20),
               _buildTextField(
+                context,
                 controller: _emailController,
                 labelText: 'Email',
                 readOnly: true, // Make email read-only for now
@@ -137,7 +140,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildTextField(
+    BuildContext context, {
     required TextEditingController controller,
     required String labelText,
     bool readOnly = false,
@@ -147,23 +151,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       children: [
         Text(
           labelText,
-          style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           readOnly: readOnly,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: Theme.of(context).textTheme.bodyMedium,
           decoration: InputDecoration(
             filled: true,
-            fillColor: const Color(0xFF1C1C1C),
+            fillColor: Theme.of(context).scaffoldBackgroundColor,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFF37C8C3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.white),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor),
             ),
           ),
         ),

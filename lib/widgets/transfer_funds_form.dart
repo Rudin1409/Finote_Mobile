@@ -103,9 +103,9 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
           right: 16,
           top: 16,
         ),
-        decoration: const BoxDecoration(
-          color: Color(0xFF2C2C2C),
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
@@ -117,7 +117,8 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
             Align(
               alignment: Alignment.topRight,
               child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
+                icon:
+                    Icon(Icons.close, color: Theme.of(context).iconTheme.color),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
@@ -125,7 +126,7 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
               'Transfer Dana',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
-                color: Colors.white,
+                color: Theme.of(context).textTheme.titleLarge?.color,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -135,12 +136,17 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
               'Pindahkan dana antar sumber dana Anda.',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
-                color: Colors.white70,
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.7),
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 24),
             _buildTextField(
+              context: context,
               label: 'Jumlah (IDR)',
               hint: 'Contoh: 100000',
               controller: _amountController,
@@ -148,6 +154,7 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
             ),
             const SizedBox(height: 16),
             _buildDropdownField(
+              context: context,
               label: 'Dari Sumber',
               hint: 'Pilih Sumber',
               value: _fromSource,
@@ -160,6 +167,7 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
             ),
             const SizedBox(height: 16),
             _buildDropdownField(
+              context: context,
               label: 'Ke Sumber',
               hint: 'Pilih Tujuan',
               value: _toSource,
@@ -172,6 +180,7 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
             ),
             const SizedBox(height: 16),
             _buildTextField(
+              context: context,
               label: 'Deskripsi (Opsional)',
               hint: 'Contoh: Ambil tunai dari ATM',
               controller: _descriptionController,
@@ -197,26 +206,36 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
   }
 
   Widget _buildTextField({
+    required BuildContext context,
     required String label,
     required String hint,
     required TextEditingController controller,
     bool isNumber = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.5)),
             filled: true,
-            fillColor: const Color(0xFF1C1C1C),
+            fillColor: isDark ? const Color(0xFF1C1C1C) : Colors.grey[200],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFF37C8C3)),
@@ -227,7 +246,8 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.white, width: 2),
+              borderSide:
+                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
             ),
           ),
         ),
@@ -236,40 +256,51 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
   }
 
   Widget _buildDropdownField({
+    required BuildContext context,
     required String label,
     required String hint,
     required List<SourceOfFund> items,
     String? value,
     required void Function(String?) onChanged,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14)),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           decoration: BoxDecoration(
-            color: const Color(0xFF1C1C1C),
+            color: isDark ? const Color(0xFF1C1C1C) : Colors.grey[200],
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: const Color(0xFF37C8C3)),
           ),
           child: DropdownButtonFormField<String>(
-            value: value,
+            initialValue: value,
             hint: Text(hint,
-                style:
-                    GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12)),
+                style: GoogleFonts.poppins(
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.color
+                        ?.withOpacity(0.5),
+                    fontSize: 12)),
             items: items.map((s) {
               return DropdownMenuItem<String>(
                 value: s.value,
                 child: Row(
                   children: [
-                    Icon(s.icon, size: 16, color: Colors.white70),
+                    Icon(s.icon,
+                        size: 16, color: Theme.of(context).iconTheme.color),
                     const SizedBox(width: 8),
                     Text(s.label,
                         style: GoogleFonts.poppins(
-                            color: Colors.white, fontSize: 12)),
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                            fontSize: 12)),
                   ],
                 ),
               );
@@ -279,8 +310,9 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
-            dropdownColor: const Color(0xFF2C2C2C),
-            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+            dropdownColor: Theme.of(context).cardColor,
+            icon: Icon(Icons.arrow_drop_down,
+                color: Theme.of(context).iconTheme.color),
             isExpanded: true,
           ),
         ),
@@ -294,11 +326,14 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
     required String hint,
     required TextEditingController controller,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14)),
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontSize: 14)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
@@ -309,18 +344,42 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
               initialDate: DateTime.now(),
               firstDate: DateTime(2000),
               lastDate: DateTime(2101),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: Theme.of(context).colorScheme.copyWith(
+                          primary: const Color(0xFF37C8C3),
+                          onPrimary: Colors.white,
+                          onSurface:
+                              Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF37C8C3),
+                      ),
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
             );
             if (pickedDate != null) {
               String formattedDate = DateFormat('d/M/yyyy').format(pickedDate);
               controller.text = formattedDate;
             }
           },
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.5)),
             filled: true,
-            fillColor: const Color(0xFF1C1C1C),
+            fillColor: isDark ? const Color(0xFF1C1C1C) : Colors.grey[200],
             suffixIcon:
                 const Icon(Icons.calendar_today, color: Color(0xFF37C8C3)),
             border: OutlineInputBorder(
@@ -358,7 +417,7 @@ class _TransferFundsFormState extends State<TransferFundsForm> {
       child: Text(
         text,
         style: GoogleFonts.poppins(
-          color: Colors.black,
+          color: Colors.black, // Button text usually explicitly contrasted
           fontWeight: FontWeight.bold,
           fontSize: 16,
         ),

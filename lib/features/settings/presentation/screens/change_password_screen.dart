@@ -85,9 +85,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       ),
       child: Container(
         padding: const EdgeInsets.all(20.0),
-        decoration: const BoxDecoration(
-          color: Color(0xFF2F2F2F),
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
@@ -102,14 +102,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   const SizedBox(width: 40), // For spacing
                   Text(
                     'Ubah Password',
-                    style: GoogleFonts.poppins(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close,
+                        color: Theme.of(context).iconTheme.color),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -117,20 +116,25 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               Text(
                 'Ubah password Anda secara berkala untuk keamanan.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(color: Colors.grey[400]),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey,
+                    ),
               ),
               const SizedBox(height: 24),
               _buildPasswordField(
+                context,
                 controller: _currentPasswordController,
                 labelText: 'Password Saat Ini',
               ),
               const SizedBox(height: 20),
               _buildPasswordField(
+                context,
                 controller: _newPasswordController,
                 labelText: 'Password Baru',
               ),
               const SizedBox(height: 20),
               _buildPasswordField(
+                context,
                 controller: _confirmPasswordController,
                 labelText: 'Konfirmasi Password Baru',
               ),
@@ -159,7 +163,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
   }
 
-  Widget _buildPasswordField({
+  Widget _buildPasswordField(
+    BuildContext context, {
     required TextEditingController controller,
     required String labelText,
   }) {
@@ -168,25 +173,25 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       children: [
         Text(
           labelText,
-          style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           obscureText: _isObscure,
-          style: GoogleFonts.poppins(color: Colors.white),
+          style: Theme.of(context).textTheme.bodyMedium,
           decoration: InputDecoration(
             hintText: '********',
             hintStyle: GoogleFonts.poppins(color: Colors.grey),
             filled: true,
-            fillColor: const Color(0xFF1C1C1C),
+            fillColor: Theme.of(context).scaffoldBackgroundColor,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFF37C8C3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.white),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor),
             ),
             suffixIcon: IconButton(
               icon: Icon(

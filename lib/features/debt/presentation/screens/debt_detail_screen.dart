@@ -7,6 +7,8 @@ import 'package:myapp/widgets/pay_debt_form.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import 'package:flutter/services.dart';
+
 class DebtDetailScreen extends StatelessWidget {
   final String debtId;
   final String title;
@@ -37,13 +39,14 @@ class DebtDetailScreen extends StatelessWidget {
     const primaryColor = Color(0xFF37C8C3);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1C1C1C),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1C1C1C),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        title: Text(title, style: const TextStyle(color: Colors.white)),
+        title: Text(title, style: Theme.of(context).textTheme.titleLarge),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon:
+              Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -126,11 +129,12 @@ class DebtDetailScreen extends StatelessWidget {
                       FittedBox(
                         child: Text(
                           currencyFormatter.format(paidAmount),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -142,7 +146,10 @@ class DebtDetailScreen extends StatelessWidget {
                     ],
                   ),
                   progressColor: primaryColor,
-                  backgroundColor: const Color(0xFF2C2C2C),
+                  backgroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[800]!
+                          : Colors.grey[300]!,
                   circularStrokeCap: CircularStrokeCap.round,
                 ),
                 const SizedBox(height: 30),
@@ -187,9 +194,9 @@ class DebtDetailScreen extends StatelessWidget {
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(24),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF2C2C2C),
-                      borderRadius: BorderRadius.only(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(20),
                         topRight: Radius.circular(20),
                       ),
@@ -197,24 +204,26 @@ class DebtDetailScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'DETAIL',
-                          style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold),
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelLarge
+                              ?.copyWith(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 16),
                         if (installmentAmount > 0)
                           Text(
                             'CICILAN: ${currencyFormatter.format(installmentAmount)} / BULAN\nDURASI: $durationInMonths BULAN\nPERKIRAAN SISA: ${remainingInstallments}X CICILAN',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: primaryColor, fontSize: 14, height: 1.5),
                           )
                         else
                           Text(
                             'TOTAL HUTANG: ${currencyFormatter.format(totalAmount)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: primaryColor, fontSize: 14, height: 1.5),
                           ),
                         const SizedBox(height: 16),
@@ -224,12 +233,14 @@ class DebtDetailScreen extends StatelessWidget {
                               const TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                         const SizedBox(height: 24),
-                        const Text(
+                        Text(
                           'RIWAYAT PEMBAYARAN',
-                          style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 16),
                         Expanded(
@@ -243,7 +254,7 @@ class DebtDetailScreen extends StatelessWidget {
                                     final entry = paymentEntries[index]
                                         as Map<String, dynamic>;
                                     return _buildPaymentHistoryItem(
-                                        entry, currencyFormatter);
+                                        context, entry, currencyFormatter);
                                   },
                                 ),
                         )
@@ -259,7 +270,7 @@ class DebtDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentHistoryItem(
+  Widget _buildPaymentHistoryItem(BuildContext context,
       Map<String, dynamic> entry, NumberFormat formatter) {
     final amount = (entry['amount'] as num).toDouble();
     final date = (entry['date'] as Timestamp).toDate();
@@ -280,7 +291,10 @@ class DebtDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Pembayaran ($source)',
-                  style: const TextStyle(color: Colors.white, fontSize: 16)),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(fontSize: 16)),
               const SizedBox(height: 4),
               Text(formattedDate,
                   style: const TextStyle(color: Colors.grey, fontSize: 12)),

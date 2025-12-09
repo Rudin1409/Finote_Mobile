@@ -97,12 +97,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: FinoteColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: Icon(Icons.close, color: Theme.of(context).iconTheme.color),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -115,12 +115,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 20),
               Text(
                 'Register',
-                style: FinoteTextStyles.displayLarge,
+                style: Theme.of(context).textTheme.displayLarge,
               ),
               const SizedBox(height: 8),
               Text(
                 'Buat akun untuk mulai mengelola\nkeuangan Anda.',
-                style: FinoteTextStyles.bodyLarge.copyWith(color: Colors.grey),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(color: Colors.grey),
               ),
               const SizedBox(height: 40),
               _buildTextField(
@@ -179,7 +182,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: Text(
                       'LOGIN DI SINI',
                       style: GoogleFonts.poppins(
-                        color: FinoteColors.primary,
+                        color: Theme.of(context).primaryColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -199,24 +202,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
     required IconData icon,
     bool isPassword = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextField(
       controller: controller,
       obscureText: isPassword,
-      style: const TextStyle(color: Colors.white),
+      style: Theme.of(context).textTheme.bodyMedium,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey),
-        prefixIcon: Icon(icon, color: FinoteColors.primary),
+        prefixIcon: Icon(icon, color: Theme.of(context).primaryColor),
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.grey),
           borderRadius: BorderRadius.circular(16),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: FinoteColors.primary),
+          borderSide: BorderSide(color: Theme.of(context).primaryColor),
           borderRadius: BorderRadius.circular(16),
         ),
         filled: true,
-        fillColor: FinoteColors.surface,
+        fillColor: isDark ? Theme.of(context).cardColor : Colors.grey[200],
       ),
     );
   }

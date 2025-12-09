@@ -56,12 +56,12 @@ class _IncomeScreenState extends State<IncomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1C1C1C),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1C1C1C),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         title: Text(
           'Pemasukan',
-          style: FinoteTextStyles.titleLarge,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         actions: [
           Padding(
@@ -89,7 +89,8 @@ class _IncomeScreenState extends State<IncomeScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.white, size: 30),
+            icon: Icon(Icons.add,
+                color: Theme.of(context).iconTheme.color, size: 30),
             onPressed: () => _showAddIncomeForm(context),
           ),
         ],
@@ -291,9 +292,9 @@ class _IncomeScreenState extends State<IncomeScreen> {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-        decoration: const BoxDecoration(
-          color: Color(0xFF2F2F2F),
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(40),
             topRight: Radius.circular(40),
           ),
@@ -306,7 +307,11 @@ class _IncomeScreenState extends State<IncomeScreen> {
               child: Text(
                 'RIWAYAT PEMASUKAN',
                 style: GoogleFonts.poppins(
-                  color: Colors.white70,
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withOpacity(0.7),
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),

@@ -30,17 +30,18 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1C1C1C),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1C1C1C),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         title: Text(
           'Pengeluaran',
-          style: FinoteTextStyles.titleLarge,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.white, size: 30),
+            icon: Icon(Icons.add,
+                color: Theme.of(context).iconTheme.color, size: 30),
             onPressed: _showAddExpenseForm,
           ),
         ],
@@ -61,13 +62,17 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   Widget _buildSearchBar() {
     return TextField(
-      style: GoogleFonts.poppins(color: Colors.white),
+      style: Theme.of(context).textTheme.bodyMedium,
       decoration: InputDecoration(
         hintText: 'Cari pengeluaran...',
-        hintStyle: GoogleFonts.poppins(color: Colors.white54),
-        prefixIcon: const Icon(Icons.search, color: Colors.white54),
+        hintStyle: Theme.of(context)
+            .textTheme
+            .bodyMedium
+            ?.copyWith(color: Colors.grey),
+        prefixIcon:
+            Icon(Icons.search, color: Theme.of(context).iconTheme.color),
         filled: true,
-        fillColor: const Color(0xFF2F2F2F),
+        fillColor: Theme.of(context).cardColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
