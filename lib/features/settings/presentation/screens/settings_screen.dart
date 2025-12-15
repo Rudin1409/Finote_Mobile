@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -8,10 +9,48 @@ import 'package:myapp/features/settings/presentation/widgets/delete_account_dial
 import 'package:myapp/features/settings/presentation/screens/edit_profile_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
+import 'package:myapp/core/services/database_helper.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   final Function(int) onNavigate;
   const SettingsScreen({super.key, required this.onNavigate});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  Uint8List? _profileImageBytes;
+  bool _isLoadingImage = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileImage();
+  }
+
+  Future<void> _loadProfileImage() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() => _isLoadingImage = false);
+      return;
+    }
+
+    try {
+      final imageBytes =
+          await DatabaseHelper.instance.getProfileImage(user.uid);
+      if (mounted) {
+        setState(() {
+          _profileImageBytes = imageBytes;
+          _isLoadingImage = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingImage = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +72,7 @@ class SettingsScreen extends StatelessWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           await FirebaseAuth.instance.currentUser?.reload();
-          // Force rebuild to show updated info if any
-          (context as Element).markNeedsBuild();
+          await _loadProfileImage();
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -43,11 +81,23 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                const CircleAvatar(
-                  radius: 50,
-                  // Placeholder for the profile image, replace with your actual image asset
-                  backgroundImage: AssetImage('assets/images/avatar.png'),
-                ),
+                _isLoadingImage
+                    ? const CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Color(0xFF37C8C3),
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : CircleAvatar(
+                        radius: 50,
+                        backgroundColor: const Color(0xFF37C8C3),
+                        backgroundImage: _profileImageBytes != null
+                            ? MemoryImage(_profileImageBytes!)
+                            : const AssetImage('assets/images/finotelogo.png')
+                                as ImageProvider,
+                      ),
                 const SizedBox(height: 16),
                 const SizedBox(height: 16),
                 Text(
@@ -90,7 +140,10 @@ class SettingsScreen extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const EditProfileScreen(),
-    );
+    ).then((_) {
+      // Reload profile image after closing edit profile sheet
+      _loadProfileImage();
+    });
   }
 
   void _showChangePasswordSheet(BuildContext context) {
@@ -118,7 +171,7 @@ class SettingsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -216,7 +269,7 @@ class SettingsScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -260,7 +313,7 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildDivider() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Divider(color: Colors.grey.withOpacity(0.2), height: 1),
+      child: Divider(color: Colors.grey.withValues(alpha: 0.2), height: 1),
     );
   }
 }

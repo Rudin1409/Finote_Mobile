@@ -18,12 +18,127 @@ class ExpenseScreen extends StatefulWidget {
 }
 
 class _ExpenseScreenState extends State<ExpenseScreen> {
+  // Filter state
+  String _selectedPeriod = 'all'; // 'week', 'month', 'all'
+  String _selectedCategory = 'all';
+  String _searchQuery = '';
+
   void _showAddExpenseForm() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const AddExpenseForm(),
+    );
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Filter Pengeluaran',
+                  style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.titleLarge?.color)),
+              const SizedBox(height: 20),
+              Text('Periode',
+                  style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).textTheme.bodyLarge?.color)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  _buildFilterChip('7 Hari', 'week', _selectedPeriod, (val) {
+                    setModalState(() => _selectedPeriod = val);
+                    setState(() => _selectedPeriod = val);
+                  }),
+                  _buildFilterChip('30 Hari', 'month', _selectedPeriod, (val) {
+                    setModalState(() => _selectedPeriod = val);
+                    setState(() => _selectedPeriod = val);
+                  }),
+                  _buildFilterChip('Semua', 'all', _selectedPeriod, (val) {
+                    setModalState(() => _selectedPeriod = val);
+                    setState(() => _selectedPeriod = val);
+                  }),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text('Kategori',
+                  style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).textTheme.bodyLarge?.color)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildFilterChip('Semua', 'all', _selectedCategory, (val) {
+                    setModalState(() => _selectedCategory = val);
+                    setState(() => _selectedCategory = val);
+                  }),
+                  ...AppConstants.categories
+                      .where((c) =>
+                          c.value != 'salary' &&
+                          c.value != 'bonus' &&
+                          c.value != 'investment')
+                      .map((cat) => _buildFilterChip(
+                              cat.label, cat.value, _selectedCategory, (val) {
+                            setModalState(() => _selectedCategory = val);
+                            setState(() => _selectedCategory = val);
+                          })),
+                ],
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF37C8C3),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('Terapkan',
+                      style: GoogleFonts.poppins(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value, String selected,
+      Function(String) onSelected) {
+    final isSelected = selected == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => onSelected(value),
+      selectedColor: const Color(0xFF37C8C3),
+      backgroundColor: Theme.of(context).cardColor,
+      labelStyle: GoogleFonts.poppins(
+        color: isSelected
+            ? Colors.white
+            : Theme.of(context).textTheme.bodyMedium?.color,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontSize: 12,
+      ),
     );
   }
 
@@ -39,6 +154,14 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
           style: Theme.of(context).textTheme.titleLarge,
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.filter_list,
+                color: (_selectedPeriod != 'all' || _selectedCategory != 'all')
+                    ? const Color(0xFF37C8C3)
+                    : Theme.of(context).iconTheme.color),
+            onPressed: _showFilterSheet,
+            tooltip: 'Filter',
+          ),
           IconButton(
             icon: Icon(Icons.add,
                 color: Theme.of(context).iconTheme.color, size: 30),
@@ -63,6 +186,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   Widget _buildSearchBar() {
     return TextField(
       style: Theme.of(context).textTheme.bodyMedium,
+      onChanged: (value) => setState(() => _searchQuery = value),
       decoration: InputDecoration(
         hintText: 'Cari pengeluaran...',
         hintStyle: Theme.of(context)
@@ -136,15 +260,51 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final transactions = snapshot.data?.docs.where((doc) {
+          // Apply filters
+          var transactions = snapshot.data?.docs.where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
-                return data['type'] == 'expense';
+                if (data['type'] != 'expense') return false;
+
+                // Apply period filter
+                if (_selectedPeriod != 'all') {
+                  final date = (data['date'] as Timestamp).toDate();
+                  final now = DateTime.now();
+                  if (_selectedPeriod == 'week') {
+                    if (now.difference(date).inDays > 7) return false;
+                  } else if (_selectedPeriod == 'month') {
+                    if (now.difference(date).inDays > 30) return false;
+                  }
+                }
+
+                // Apply category filter
+                if (_selectedCategory != 'all') {
+                  final category = data['category'] as String?;
+                  if (category != _selectedCategory) return false;
+                }
+
+                // Apply search filter
+                if (_searchQuery.isNotEmpty) {
+                  final category =
+                      (data['category'] as String? ?? '').toLowerCase();
+                  final description =
+                      (data['description'] as String? ?? '').toLowerCase();
+                  final query = _searchQuery.toLowerCase();
+                  if (!category.contains(query) && !description.contains(query))
+                    return false;
+                }
+
+                return true;
               }).toList() ??
               [];
 
           if (transactions.isEmpty) {
             return Center(
-                child: Text('Belum ada data pengeluaran',
+                child: Text(
+                    _selectedPeriod != 'all' ||
+                            _selectedCategory != 'all' ||
+                            _searchQuery.isNotEmpty
+                        ? 'Tidak ada data sesuai filter'
+                        : 'Belum ada data pengeluaran',
                     style: FinoteTextStyles.bodyMedium));
           }
 

@@ -4,11 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/core/services/firestore_service.dart';
 import 'package:myapp/features/savings/presentation/screens/add_funds_screen.dart';
+import 'package:myapp/widgets/edit_saving_form.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
-import 'package:flutter/services.dart';
-
-class SavingsDetailScreen extends StatelessWidget {
+class SavingsDetailScreen extends StatefulWidget {
   final String savingId;
   final String title;
 
@@ -17,6 +16,93 @@ class SavingsDetailScreen extends StatelessWidget {
     required this.savingId,
     required this.title,
   });
+
+  @override
+  State<SavingsDetailScreen> createState() => _SavingsDetailScreenState();
+}
+
+class _SavingsDetailScreenState extends State<SavingsDetailScreen> {
+  final FirestoreService _firestoreService = FirestoreService();
+
+  void _showDeleteConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                color: Colors.orange, size: 28),
+            const SizedBox(width: 12),
+            Text('Hapus Tabungan?',
+                style: Theme.of(context).textTheme.titleLarge),
+          ],
+        ),
+        content: const Text(
+          'Data tabungan ini akan dihapus permanen dan tidak dapat dikembalikan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteSaving();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteSaving() async {
+    try {
+      await _firestoreService.deleteSaving(widget.savingId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tabungan berhasil dihapus'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context); // Go back to savings list
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menghapus: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showEditForm(Map<String, dynamic> data) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: EditSavingForm(
+          savingId: widget.savingId,
+          initialData: data,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +118,33 @@ class SavingsDetailScreen extends StatelessWidget {
               Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(title, style: Theme.of(context).textTheme.titleLarge),
+        title:
+            Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
+        actions: [
+          StreamBuilder<DocumentSnapshot>(
+            stream: _firestoreService.getSavingStream(widget.savingId),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || !snapshot.data!.exists) {
+                return const SizedBox.shrink();
+              }
+              final data = snapshot.data!.data() as Map<String, dynamic>;
+              return IconButton(
+                icon: Icon(Icons.edit_outlined,
+                    color: Theme.of(context).iconTheme.color),
+                onPressed: () => _showEditForm(data),
+                tooltip: 'Edit',
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            onPressed: _showDeleteConfirmationDialog,
+            tooltip: 'Hapus',
+          ),
+        ],
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirestoreService().getSavingStream(savingId),
+        stream: _firestoreService.getSavingStream(widget.savingId),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
@@ -137,8 +246,8 @@ class SavingsDetailScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                     builder: (context) => AddFundsScreen(
-                          savingGoalName: title,
-                          savingId: savingId,
+                          savingGoalName: widget.title,
+                          savingId: widget.savingId,
                         )),
               );
             },

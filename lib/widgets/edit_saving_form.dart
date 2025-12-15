@@ -1,0 +1,388 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:myapp/core/services/firestore_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class EditSavingForm extends StatefulWidget {
+  final String savingId;
+  final Map<String, dynamic> initialData;
+
+  const EditSavingForm({
+    super.key,
+    required this.savingId,
+    required this.initialData,
+  });
+
+  @override
+  State<EditSavingForm> createState() => _EditSavingFormState();
+}
+
+class _EditSavingFormState extends State<EditSavingForm> {
+  late bool isTargetSelected;
+  DateTime? _selectedDate;
+  late TextEditingController _titleController;
+  late TextEditingController _targetAmountController;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final data = widget.initialData;
+
+    isTargetSelected = data['goalType'] != 'regular';
+    _titleController = TextEditingController(text: data['name'] ?? '');
+    _targetAmountController = TextEditingController(
+        text: (data['targetAmount'] as num?)?.toStringAsFixed(0) ?? '');
+
+    // Parse date
+    if (data['targetDate'] != null) {
+      _selectedDate = (data['targetDate'] as Timestamp).toDate();
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _targetAmountController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveSaving() async {
+    if (_titleController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nama tabungan harus diisi'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      double targetAmount = 0;
+      if (isTargetSelected && _targetAmountController.text.isNotEmpty) {
+        targetAmount = double.parse(
+            _targetAmountController.text.replaceAll(RegExp(r'[^0-9]'), ''));
+      }
+
+      await FirestoreService().updateSaving(widget.savingId, {
+        'name': _titleController.text,
+        'goalType': isTargetSelected ? 'target' : 'regular',
+        'targetAmount': targetAmount,
+        'targetDate':
+            _selectedDate != null ? Timestamp.fromDate(_selectedDate!) : null,
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tabungan berhasil diperbarui'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memperbarui tabungan: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const primaryColor = Color(0xFF37C8C3);
+
+    return Container(
+      padding: const EdgeInsets.all(25.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(40),
+          topRight: Radius.circular(40),
+        ),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Text(
+                  'Edit Tabungan',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    color: Theme.of(context).textTheme.titleLarge?.color,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: Icon(Icons.close,
+                        color: Theme.of(context).iconTheme.color, size: 28),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Ubah detail tabungan Anda.',
+              style: GoogleFonts.poppins(
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withValues(alpha: 0.7),
+                  fontSize: 14),
+            ),
+            const SizedBox(height: 30),
+            _buildSavingTypeSelector(context, primaryColor),
+            const SizedBox(height: 25),
+            _buildTextField(
+              context: context,
+              label: 'Nama Tabungan',
+              hint: isTargetSelected ? 'Ex: Motor' : 'Ex: Dana Darurat',
+              controller: _titleController,
+            ),
+            const SizedBox(height: 15),
+            if (isTargetSelected)
+              Column(
+                children: [
+                  _buildTextField(
+                    context: context,
+                    label: 'Jumlah Target (IDR)',
+                    hint: 'Ex: 50000',
+                    keyboardType: TextInputType.number,
+                    controller: _targetAmountController,
+                  ),
+                  const SizedBox(height: 15),
+                  _buildDateField(context),
+                ],
+              ),
+            const SizedBox(height: 35),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _saveSaving,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                minimumSize: const Size(double.infinity, 55),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'SIMPAN PERUBAHAN',
+                      style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold),
+                    ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSavingTypeSelector(BuildContext context, Color primaryColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Pilih Jenis Tabungan',
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                fontSize: 16)),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _buildTypeButton(
+                  context, 'TARGET', isTargetSelected, primaryColor, () {
+                setState(() => isTargetSelected = true);
+              }),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: _buildTypeButton(
+                  context, 'BIASA', !isTargetSelected, primaryColor, () {
+                setState(() => isTargetSelected = false);
+              }),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTypeButton(BuildContext context, String text, bool isSelected,
+      Color color, VoidCallback onPressed) {
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: isSelected ? color : Colors.transparent,
+        side: BorderSide(
+            color: isSelected ? color : Colors.grey[600]!, width: 1.5),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.poppins(
+          color: isSelected
+              ? Colors.white
+              : Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.color
+                  ?.withValues(alpha: 0.6),
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required BuildContext context,
+    required String label,
+    required String hint,
+    TextInputType keyboardType = TextInputType.text,
+    required TextEditingController controller,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                fontSize: 16)),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          style: GoogleFonts.poppins(
+              color: Theme.of(context).textTheme.bodyLarge?.color),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.poppins(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withValues(alpha: 0.5)),
+            filled: true,
+            fillColor: isDark ? const Color(0xFF1C1C1C) : Colors.grey[200],
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide:
+                  const BorderSide(color: Color(0xFF37C8C3), width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide:
+                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateField(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Tanggal Target',
+            style: GoogleFonts.poppins(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                fontSize: 16)),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () async {
+            DateTime? pickedDate = await showDatePicker(
+              context: context,
+              initialDate: _selectedDate ?? DateTime.now(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2101),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: Theme.of(context).colorScheme.copyWith(
+                          primary: const Color(0xFF37C8C3),
+                          onPrimary: Colors.white,
+                          onSurface:
+                              Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF37C8C3),
+                      ),
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (pickedDate != null) {
+              setState(() {
+                _selectedDate = pickedDate;
+              });
+            }
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1C1C1C) : Colors.grey[200],
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: const Color(0xFF37C8C3), width: 1.5),
+            ),
+            child: Text(
+              _selectedDate == null
+                  ? 'Pilih Tanggal'
+                  : DateFormat('dd MMMM yyyy').format(_selectedDate!),
+              style: GoogleFonts.poppins(
+                  color: _selectedDate == null
+                      ? Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withValues(alpha: 0.5)
+                      : Theme.of(context).textTheme.bodyLarge?.color),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

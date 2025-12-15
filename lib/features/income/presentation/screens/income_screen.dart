@@ -44,12 +44,127 @@ class _IncomeScreenState extends State<IncomeScreen> {
     },
   ];
 
+  // Filter state
+  String _selectedPeriod = 'all'; // 'week', 'month', 'all'
+  String _selectedSource = 'all'; // 'cash', 'bank', 'digital-wallet', 'all'
+
   void _showAddIncomeForm(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const AddIncomeForm(),
+    );
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Filter Pemasukan',
+                  style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.titleLarge?.color)),
+              const SizedBox(height: 20),
+              Text('Periode',
+                  style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).textTheme.bodyLarge?.color)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  _buildFilterChip('7 Hari', 'week', _selectedPeriod, (val) {
+                    setModalState(() => _selectedPeriod = val);
+                    setState(() => _selectedPeriod = val);
+                  }),
+                  _buildFilterChip('30 Hari', 'month', _selectedPeriod, (val) {
+                    setModalState(() => _selectedPeriod = val);
+                    setState(() => _selectedPeriod = val);
+                  }),
+                  _buildFilterChip('Semua', 'all', _selectedPeriod, (val) {
+                    setModalState(() => _selectedPeriod = val);
+                    setState(() => _selectedPeriod = val);
+                  }),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text('Sumber Dana',
+                  style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).textTheme.bodyLarge?.color)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  _buildFilterChip('Semua', 'all', _selectedSource, (val) {
+                    setModalState(() => _selectedSource = val);
+                    setState(() => _selectedSource = val);
+                  }),
+                  _buildFilterChip('Tunai', 'cash', _selectedSource, (val) {
+                    setModalState(() => _selectedSource = val);
+                    setState(() => _selectedSource = val);
+                  }),
+                  _buildFilterChip('Bank', 'bank', _selectedSource, (val) {
+                    setModalState(() => _selectedSource = val);
+                    setState(() => _selectedSource = val);
+                  }),
+                  _buildFilterChip(
+                      'E-Wallet', 'digital-wallet', _selectedSource, (val) {
+                    setModalState(() => _selectedSource = val);
+                    setState(() => _selectedSource = val);
+                  }),
+                ],
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF37C8C3),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('Terapkan',
+                      style: GoogleFonts.poppins(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value, String selected,
+      Function(String) onSelected) {
+    final isSelected = selected == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => onSelected(value),
+      selectedColor: const Color(0xFF37C8C3),
+      backgroundColor: Theme.of(context).cardColor,
+      labelStyle: GoogleFonts.poppins(
+        color: isSelected
+            ? Colors.white
+            : Theme.of(context).textTheme.bodyMedium?.color,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
     );
   }
 
@@ -64,6 +179,14 @@ class _IncomeScreenState extends State<IncomeScreen> {
           style: Theme.of(context).textTheme.titleLarge,
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.filter_list,
+                color: (_selectedPeriod != 'all' || _selectedSource != 'all')
+                    ? const Color(0xFF37C8C3)
+                    : Theme.of(context).iconTheme.color),
+            onPressed: _showFilterSheet,
+            tooltip: 'Filter',
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: ElevatedButton.icon(
@@ -155,10 +278,37 @@ class _IncomeScreenState extends State<IncomeScreen> {
             }
           }
 
-          // Filter for history list (only show Income)
-          final incomeTransactions = allTransactions.where((doc) {
+          // Filter for history list (only show Income with filters applied)
+          var incomeTransactions = allTransactions.where((doc) {
             final data = doc.data() as Map<String, dynamic>;
-            return data['type'] == 'income';
+            if (data['type'] != 'income') return false;
+
+            // Apply period filter
+            if (_selectedPeriod != 'all') {
+              final date = (data['date'] as Timestamp).toDate();
+              final now = DateTime.now();
+              if (_selectedPeriod == 'week') {
+                if (now.difference(date).inDays > 7) return false;
+              } else if (_selectedPeriod == 'month') {
+                if (now.difference(date).inDays > 30) return false;
+              }
+            }
+
+            // Apply source filter
+            if (_selectedSource != 'all') {
+              final source = data['source'] as String? ?? 'other';
+              if (_selectedSource == 'cash' &&
+                  source != 'cash' &&
+                  source != 'Tunai') return false;
+              if (_selectedSource == 'bank' &&
+                  source != 'bank' &&
+                  source != 'Bank') return false;
+              if (_selectedSource == 'digital-wallet' &&
+                  source != 'digital-wallet' &&
+                  source != 'Dompet Digital') return false;
+            }
+
+            return true;
           }).toList();
 
           // Update card data

@@ -4,12 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/core/services/firestore_service.dart';
 import 'package:myapp/widgets/pay_debt_form.dart';
+import 'package:myapp/widgets/edit_debt_form.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import 'package:flutter/services.dart';
-
-class DebtDetailScreen extends StatelessWidget {
+class DebtDetailScreen extends StatefulWidget {
   final String debtId;
   final String title;
 
@@ -19,7 +18,14 @@ class DebtDetailScreen extends StatelessWidget {
     required this.title,
   });
 
-  // Dummy data for the payment URL - In a real app, this might come from the debt data or config
+  @override
+  State<DebtDetailScreen> createState() => _DebtDetailScreenState();
+}
+
+class _DebtDetailScreenState extends State<DebtDetailScreen> {
+  final FirestoreService _firestoreService = FirestoreService();
+
+  // Dummy data for the payment URL
   final String paymentUrl = 'https://link.shopeepay.co.id/2/23423423';
 
   void _showPayDebtModal(BuildContext context) {
@@ -29,7 +35,140 @@ class DebtDetailScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => PayDebtForm(
         paymentUrl: paymentUrl,
-        debtId: debtId,
+        debtId: widget.debtId,
+        onPaymentComplete: _checkAndDeleteIfPaid,
+      ),
+    );
+  }
+
+  Future<void> _checkAndDeleteIfPaid() async {
+    // Check if debt is fully paid and show delete confirmation
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_firestoreService.userId)
+        .collection('debts')
+        .doc(widget.debtId)
+        .get();
+
+    if (!snapshot.exists) return;
+
+    final data = snapshot.data()!;
+    final isPaid = data['isPaid'] == true;
+
+    if (isPaid && mounted) {
+      _showPaidConfirmationDialog();
+    }
+  }
+
+  void _showPaidConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.green, size: 28),
+            const SizedBox(width: 12),
+            Text('Hutang Lunas!',
+                style: Theme.of(context).textTheme.titleLarge),
+          ],
+        ),
+        content: const Text(
+          'Selamat! Hutang ini sudah lunas. Apakah Anda ingin menghapus data hutang ini?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Simpan'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              await _deleteDebt();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                color: Colors.orange, size: 28),
+            const SizedBox(width: 12),
+            Text('Hapus Hutang?',
+                style: Theme.of(context).textTheme.titleLarge),
+          ],
+        ),
+        content: const Text(
+          'Data hutang ini akan dihapus permanen dan tidak dapat dikembalikan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteDebt();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteDebt() async {
+    try {
+      await _firestoreService.deleteDebt(widget.debtId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Hutang berhasil dihapus'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context); // Go back to debt list
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menghapus: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showEditForm(Map<String, dynamic> data) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => EditDebtForm(
+        debtId: widget.debtId,
+        initialData: data,
       ),
     );
   }
@@ -43,15 +182,38 @@ class DebtDetailScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        title: Text(title, style: Theme.of(context).textTheme.titleLarge),
+        title:
+            Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
         leading: IconButton(
           icon:
               Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          StreamBuilder<DocumentSnapshot>(
+            stream: _firestoreService.getDebtStream(widget.debtId),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || !snapshot.data!.exists) {
+                return const SizedBox.shrink();
+              }
+              final data = snapshot.data!.data() as Map<String, dynamic>;
+              return IconButton(
+                icon: Icon(Icons.edit_outlined,
+                    color: Theme.of(context).iconTheme.color),
+                onPressed: () => _showEditForm(data),
+                tooltip: 'Edit',
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            onPressed: _showDeleteConfirmationDialog,
+            tooltip: 'Hapus',
+          ),
+        ],
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirestoreService().getDebtStream(debtId),
+        stream: _firestoreService.getDebtStream(widget.debtId),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
@@ -217,13 +379,13 @@ class DebtDetailScreen extends StatelessWidget {
                         if (installmentAmount > 0)
                           Text(
                             'CICILAN: ${currencyFormatter.format(installmentAmount)} / BULAN\nDURASI: $durationInMonths BULAN\nPERKIRAAN SISA: ${remainingInstallments}X CICILAN',
-                            style: TextStyle(
+                            style: const TextStyle(
                                 color: primaryColor, fontSize: 14, height: 1.5),
                           )
                         else
                           Text(
                             'TOTAL HUTANG: ${currencyFormatter.format(totalAmount)}',
-                            style: TextStyle(
+                            style: const TextStyle(
                                 color: primaryColor, fontSize: 14, height: 1.5),
                           ),
                         const SizedBox(height: 16),

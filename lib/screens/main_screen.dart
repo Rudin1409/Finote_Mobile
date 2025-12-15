@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:myapp/features/home/presentation/screens/home_screen.dart';
 import 'package:myapp/features/settings/presentation/screens/settings_screen.dart';
 import 'package:myapp/features/savings/presentation/screens/savings_screen.dart';
@@ -45,7 +46,8 @@ class _MainScreenState extends State<MainScreen> {
 
     final navBarItems = <Widget>[
       const Icon(Icons.receipt_long, size: 30, color: Colors.white), // Hutang
-      const Icon(Icons.savings, size: 30, color: Colors.white), // Tabungan
+      const FaIcon(FontAwesomeIcons.sackDollar,
+          size: 26, color: Colors.white), // Tabungan
       const Icon(Icons.home_filled, size: 30, color: Colors.white), // Home
       const Icon(Icons.auto_awesome, size: 30, color: Colors.white), // AI
       const Icon(Icons.settings, size: 30, color: Colors.white), // Settings

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/screens/onboarding/onboarding_screen.dart';
 import 'package:myapp/screens/main_screen.dart';
+import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,6 +18,8 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
+
+  static const String _onboardingKey = 'hasSeenOnboarding';
 
   @override
   void initState() {
@@ -37,20 +41,31 @@ class _SplashScreenState extends State<SplashScreen>
 
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        _checkAuthAndNavigate();
+        _checkAndNavigate();
       }
     });
   }
 
-  void _checkAuthAndNavigate() {
+  Future<void> _checkAndNavigate() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding = prefs.getBool(_onboardingKey) ?? false;
+
     User? user = FirebaseAuth.instance.currentUser;
+
     if (user != null) {
+      // User is logged in, go to main screen
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const MainScreen()),
       );
-    } else {
+    } else if (!hasSeenOnboarding) {
+      // First time user, show onboarding
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+      );
+    } else {
+      // Has seen onboarding but not logged in, go to login
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     }
   }

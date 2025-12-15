@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:myapp/features/savings/presentation/screens/savings_detail_screen.dart';
 import 'package:myapp/widgets/add_saving_form.dart';
@@ -140,10 +141,10 @@ class SavingsScreen extends StatelessWidget {
         NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
     return Column(
       children: [
-        Icon(
-          Icons.savings_outlined, // Placeholder icon
+        FaIcon(
+          FontAwesomeIcons.sackDollar, // Money sack icon
           color: primaryColor,
-          size: 60,
+          size: 50,
         ),
         const SizedBox(height: 10),
         Text(
@@ -216,7 +217,7 @@ class SavingsScreen extends StatelessWidget {
                             _buildAnimatedSavingCard(
                               context,
                               index,
-                              Icons.savings, // Default icon
+                              Icons.account_balance_wallet, // Default icon
                               data['name'] ?? 'Tabungan',
                               '${currencyFormatter.format(remaining)} TERSISA',
                               progress,

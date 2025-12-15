@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:myapp/core/theme/app_theme.dart';
 import 'package:myapp/core/services/firestore_service.dart';
+import 'package:myapp/core/services/database_helper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/core/constants/app_constants.dart';
@@ -32,11 +35,30 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int touchedIndex = -1;
   bool _isLoading = true;
+  Uint8List? _profileImageBytes;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _loadProfileImage();
+  }
+
+  Future<void> _loadProfileImage() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final imageBytes =
+          await DatabaseHelper.instance.getProfileImage(user.uid);
+      if (mounted) {
+        setState(() {
+          _profileImageBytes = imageBytes;
+        });
+      }
+    } catch (e) {
+      // Silently fail - will use default image
+    }
   }
 
   Future<void> _loadData() async {
@@ -77,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Rudin",
+                  Text(FirebaseAuth.instance.currentUser?.displayName ?? 'User',
                       style: GoogleFonts.poppins(
                           color: Theme.of(context).textTheme.bodyLarge?.color,
                           fontWeight: FontWeight.bold,
@@ -89,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              Text("muhammadbahrudin1409@gmail.com",
+              Text(FirebaseAuth.instance.currentUser?.email ?? 'No email',
                   style: GoogleFonts.poppins(
                       color: Theme.of(context).textTheme.bodyMedium?.color,
                       fontSize: 12)),
@@ -133,16 +155,22 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
-        leading: const Padding(
-          padding: EdgeInsets.all(8.0),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
-            backgroundImage: AssetImage('assets/images/avatar.png'),
+            backgroundColor: const Color(0xFF37C8C3),
+            backgroundImage: _profileImageBytes != null
+                ? MemoryImage(_profileImageBytes!)
+                : const AssetImage('assets/images/finotelogo.png')
+                    as ImageProvider,
           ),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Halo, Rudin!', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+                'Halo, ${FirebaseAuth.instance.currentUser?.displayName ?? 'User'}!',
+                style: Theme.of(context).textTheme.titleLarge),
             Text('Selamat Datang Kembali',
                 style: Theme.of(context)
                     .textTheme
@@ -356,6 +384,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildExpenseChart(transactions),
                   const SizedBox(height: 24),
                   _buildSummarySection(totalExpense),
+                  const SizedBox(
+                      height: 120), // Bottom padding for navigation bar
                 ],
               ),
             ),

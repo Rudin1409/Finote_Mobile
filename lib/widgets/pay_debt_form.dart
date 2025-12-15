@@ -9,11 +9,13 @@ import 'package:myapp/core/constants/app_constants.dart';
 class PayDebtForm extends StatefulWidget {
   final String paymentUrl;
   final String debtId;
+  final VoidCallback? onPaymentComplete;
 
   const PayDebtForm({
     super.key,
     required this.paymentUrl,
     required this.debtId,
+    this.onPaymentComplete,
   });
 
   @override
@@ -77,6 +79,9 @@ class PayDebtFormState extends State<PayDebtForm> {
           ),
         );
         Navigator.of(context).pop();
+
+        // Call callback after successful payment
+        widget.onPaymentComplete?.call();
       }
     } catch (e) {
       if (mounted) {

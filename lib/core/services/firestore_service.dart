@@ -317,4 +317,52 @@ class FirestoreService {
         .doc(notificationId)
         .delete();
   }
+
+  // --- Savings CRUD ---
+
+  /// Delete a saving goal
+  Future<void> deleteSaving(String savingId) async {
+    if (_userId == null) return;
+    await _db
+        .collection('users')
+        .doc(_userId)
+        .collection('savings')
+        .doc(savingId)
+        .delete();
+  }
+
+  /// Update a saving goal
+  Future<void> updateSaving(String savingId, Map<String, dynamic> data) async {
+    if (_userId == null) return;
+    await _db
+        .collection('users')
+        .doc(_userId)
+        .collection('savings')
+        .doc(savingId)
+        .update(data);
+  }
+
+  // --- Debts CRUD ---
+
+  /// Delete a debt
+  Future<void> deleteDebt(String debtId) async {
+    if (_userId == null) return;
+    await _db
+        .collection('users')
+        .doc(_userId)
+        .collection('debts')
+        .doc(debtId)
+        .delete();
+  }
+
+  /// Update a debt
+  Future<void> updateDebt(String debtId, Map<String, dynamic> data) async {
+    if (_userId == null) return;
+    await _db
+        .collection('users')
+        .doc(_userId)
+        .collection('debts')
+        .doc(debtId)
+        .update(data);
+  }
 }
