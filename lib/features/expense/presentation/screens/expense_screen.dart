@@ -289,8 +289,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                   final description =
                       (data['description'] as String? ?? '').toLowerCase();
                   final query = _searchQuery.toLowerCase();
-                  if (!category.contains(query) && !description.contains(query))
+                  if (!category.contains(query) && !description.contains(query)) {
                     return false;
+                  }
                 }
 
                 return true;

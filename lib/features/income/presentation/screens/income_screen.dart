@@ -299,13 +299,19 @@ class _IncomeScreenState extends State<IncomeScreen> {
               final source = data['source'] as String? ?? 'other';
               if (_selectedSource == 'cash' &&
                   source != 'cash' &&
-                  source != 'Tunai') return false;
+                  source != 'Tunai') {
+                return false;
+              }
               if (_selectedSource == 'bank' &&
                   source != 'bank' &&
-                  source != 'Bank') return false;
+                  source != 'Bank') {
+                return false;
+              }
               if (_selectedSource == 'digital-wallet' &&
                   source != 'digital-wallet' &&
-                  source != 'Dompet Digital') return false;
+                  source != 'Dompet Digital') {
+                return false;
+              }
             }
 
             return true;
